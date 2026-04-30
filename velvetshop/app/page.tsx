@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { supabase } from "../lib/supabase.js";
 
 interface Listing {
@@ -12,6 +12,7 @@ interface Listing {
   price: number;
   type: string;
   image: string;
+  image_url?: string;
   color: string;
   urgent: boolean;
   verified: boolean;
@@ -37,7 +38,7 @@ export default function VelvetViper() {
   const [countryFilter, setCountryFilter] = useState("All Countries");
   const [cityFilter, setCityFilter] = useState("All Cities");
   const [searchQuery, setSearchQuery] = useState("");
-  const [formData, setFormData] = useState({ species: "", age: "", location: "", price: "", description: "", name: "", contact: "", country: "" });
+  const [formData, setFormData] = useState({ species: "", age: "", location: "", price: "", description: "", name: "", contact: "", country: "", image_url: "" });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,8 @@ export default function VelvetViper() {
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [formCityInput, setFormCityInput] = useState("");
   const [showFormCitySuggestions, setShowFormCitySuggestions] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const cityOptions = countryFilter === "All Countries"
     ? ALL_CITIES
@@ -57,6 +60,68 @@ export default function VelvetViper() {
   const filteredCitySuggestions = cityOptions.filter(c => 
     c.toLowerCase().includes(cityInput.toLowerCase())
   );
+
+  const uploadImage = async (file: File) => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) {
+      setError("Missing Cloudinary configuration.");
+      return;
+    }
+
+    setUploadingImage(true);
+    setUploadProgress(0);
+    setError(null);
+
+    try {
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", uploadPreset);
+
+      const imageUrl = await new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", uploadUrl);
+
+        xhr.upload.addEventListener("progress", event => {
+          if (event.lengthComputable) {
+            setUploadProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        });
+
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                resolve(response.secure_url || response.url);
+              } catch (err) {
+                reject(new Error("Invalid Cloudinary response."));
+              }
+            } else {
+              reject(new Error("Cloudinary upload failed."));
+            }
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Cloudinary upload failed."));
+        xhr.send(form);
+      });
+
+      setFormData(prev => ({ ...prev, image_url: imageUrl }));
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Image upload failed.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleImageInput = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadImage(file);
+    }
+  };
 
   const filteredFormCitySuggestions = formCityOptions.filter(c => 
     c.toLowerCase().includes(formCityInput.toLowerCase())
@@ -110,6 +175,7 @@ export default function VelvetViper() {
       price: parseInt(formData.price) || 0,
       type: formData.species.toLowerCase().includes("gecko") ? "gecko" : formData.species.toLowerCase().includes("snake") ? "snake" : "lizard",
       image: "🦎",
+      image_url: formData.image_url || "",
       color: "#1a2e1a",
       urgent: false,
       verified: false,
@@ -208,6 +274,9 @@ export default function VelvetViper() {
         <div style={styles.modal} onClick={() => setSelectedListing(null)}>
           <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
             <button style={styles.modalClose} onClick={() => setSelectedListing(null)}>✕</button>
+            {selectedListing.image_url && (
+              <img src={selectedListing.image_url} alt={selectedListing.name} style={{ width: "100%", maxHeight: 320, objectFit: "cover", borderRadius: 12, marginBottom: 20 }} />
+            )}
             <span style={styles.modalSpecies}>{selectedListing.species}</span>
             <div style={styles.modalName}>{selectedListing.name}</div>
             <div style={styles.modalLocation}>📍 {selectedListing.location} · {selectedListing.age} old</div>
@@ -270,7 +339,11 @@ export default function VelvetViper() {
                 <div key={l.id} style={styles.card} onClick={() => setSelectedListing(l)}>
                   {l.urgent && <div style={styles.urgentBadge}>Urgent</div>}
                   <div style={styles.cardBadge(l.verified)}>{l.verified ? "✓ Verified" : "Unverified"}</div>
-                  <span style={styles.cardEmoji}>{l.image}</span>
+                  {l.image_url ? (
+                    <img src={l.image_url} alt={l.name} style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 12, marginBottom: 16 }} />
+                  ) : (
+                    <span style={styles.cardEmoji}>{l.image}</span>
+                  )}
                   <div style={styles.cardSpecies}>{l.species}</div>
                   <div style={styles.cardName}>{l.name}</div>
                   <div style={styles.cardMeta}>{l.age} · {l.location}</div>
@@ -343,7 +416,11 @@ export default function VelvetViper() {
                 <div key={l.id} style={styles.card} onClick={() => setSelectedListing(l)}>
                   {l.urgent && <div style={styles.urgentBadge}>Urgent</div>}
                   <div style={styles.cardBadge(l.verified)}>{l.verified ? "✓ Verified" : "Unverified"}</div>
-                  <span style={styles.cardEmoji}>{l.image}</span>
+                  {l.image_url ? (
+                    <img src={l.image_url} alt={l.name} style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 12, marginBottom: 16 }} />
+                  ) : (
+                    <span style={styles.cardEmoji}>{l.image}</span>
+                  )}
                   <div style={styles.cardSpecies}>{l.species}</div>
                   <div style={styles.cardName}>{l.name}</div>
                   <div style={styles.cardMeta}>{l.age} · {l.location}</div>
@@ -365,8 +442,8 @@ export default function VelvetViper() {
               <div style={styles.successTitle}>Listing Submitted!</div>
               <p style={styles.successSub}>Your reptile is now live on VelvetViper. We'll review it shortly.</p>
               <div style={{ marginTop: 32, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                <button style={styles.btnPrimary} onClick={() => { setPage("browse"); setSubmitted(false); setFormData({ species: "", age: "", location: "", price: "", description: "", name: "", contact: "", country: "" }); }}>View All Listings</button>
-                <button style={styles.btnOutline} onClick={() => { setSubmitted(false); setFormData({ species: "", age: "", location: "", price: "", description: "", name: "", contact: "", country: "" }); }}>Add Another</button>
+                <button style={styles.btnPrimary} onClick={() => { setPage("browse"); setSubmitted(false); setFormData({ species: "", age: "", location: "", price: "", description: "", name: "", contact: "", country: "", image_url: "" }); }}>View All Listings</button>
+                <button style={styles.btnOutline} onClick={() => { setSubmitted(false); setFormData({ species: "", age: "", location: "", price: "", description: "", name: "", contact: "", country: "", image_url: "" }); }}>Add Another</button>
               </div>
             </div>
           ) : (
@@ -397,6 +474,27 @@ export default function VelvetViper() {
                   <option value="">Select your country</option>
                   {COUNTRIES.slice(1).map(c => <option key={c}>{c}</option>)}
                 </select>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Upload Photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ ...styles.input, padding: "10px 16px" }}
+                  onChange={handleImageInput}
+                />
+                {uploadingImage && (
+                  <div style={{ marginTop: 8, color: "#e8e0d0", fontSize: 12 }}>
+                    Uploading: {uploadProgress}%
+                    <div style={{ height: 6, marginTop: 6, background: "#111", border: "1px solid #2a2a2a", borderRadius: 4 }}>
+                      <div style={{ width: `${uploadProgress}%`, height: "100%", background: "#c8ff00" }} />
+                    </div>
+                  </div>
+                )}
+                {!uploadingImage && formData.image_url && (
+                  <div style={{ marginTop: 8, color: "#888", fontSize: 12 }}>Image uploaded</div>
+                )}
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>City / Location *</label>
