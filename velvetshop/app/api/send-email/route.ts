@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const { giftCardCode, listingDetails, userEmail } = await request.json();
 
     await resend.emails.send({
-      from: "VelvetViper <onboarding@resend.dev>",,
+      from: "VelvetViper <onboarding@resend.dev>",
       to: "reptilelizard48@gmail.com",
       subject: "🎟️ Gift Card Used - New Listing Payment",
       html: `
