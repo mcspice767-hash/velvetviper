@@ -1,29 +1,53 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "/lib/supabase.js";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "../lib/supabase";
 
 const SPECIES_FILTERS = ["All", "Snakes", "Geckos", "Lizards"];
+const COUNTRY_OPTIONS = ["UK", "USA", "Canada", "Nigeria", "Cameroon"];
 const CITIES = ["All Cities", "Lagos", "Abuja", "Douala", "Yaoundé", "Kribi", "Limbe", "Bafoussam"];
 
 export default function VelvetViper() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [page, setPage] = useState("home");
   const [listings, setListings] = useState([]);
   const [selectedListing, setSelectedListing] = useState(null);
   const [speciesFilter, setSpeciesFilter] = useState("All");
   const [cityFilter, setCityFilter] = useState("All Cities");
   const [searchQuery, setSearchQuery] = useState("");
-  const [formData, setFormData] = useState({ species: "", age: "", location: "", price: "", description: "", name: "", contact: "" });
+  const [formData, setFormData] = useState({ species: "", age: "", location: "", country: "", price: "", description: "", name: "", contact: "" });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     setMounted(true);
     fetchListings();
-  }, []);
+
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user || null);
+    };
+
+    fetchUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    if (searchParams?.get("from") === "list") {
+      setPage("list");
+    }
+
+    return () => {
+      authListener?.subscription?.unsubscribe?.();
+    };
+  }, [searchParams]);
 
   async function fetchListings() {
     setLoading(true);
@@ -54,16 +78,31 @@ export default function VelvetViper() {
     return matchSpecies && matchCity && matchSearch;
   });
 
-  const handleSubmit = async () => {
-    if (!formData.species || !formData.location || !formData.contact) return;
-    setLoading(true);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setPage("home");
+    router.push("/");
+  };
+
+  const handleStartPayment = async () => {
+    if (!formData.species || !formData.location || !formData.contact || !formData.country) return;
     setError(null);
 
-    const newListing = {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const loggedInUser = authData?.user;
+
+    if (authError || !loggedInUser) {
+      setError("You must be logged in to submit a listing.");
+      return;
+    }
+
+    const pendingListing = {
       species: formData.species,
       name: formData.name || "Unnamed",
       age: formData.age || "Unknown",
       location: formData.location,
+      country: formData.country,
       price: parseInt(formData.price) || 0,
       type: formData.species.toLowerCase().includes("gecko") ? "gecko" : formData.species.toLowerCase().includes("snake") ? "snake" : "lizard",
       image: "🦎",
@@ -71,19 +110,15 @@ export default function VelvetViper() {
       urgent: false,
       verified: false,
       description: formData.description,
-      contact: formData.contact,
+      contact: formData.contact || loggedInUser.email,
       status: "pending",
+      user_id: loggedInUser.id,
+      user_email: loggedInUser.email || "",
+      payment_status: "unpaid",
     };
 
-    const { error } = await supabase.from("listings").insert([newListing]);
-    setLoading(false);
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    setSubmitted(true);
+    sessionStorage.setItem("pendingListing", JSON.stringify(pendingListing));
+    router.push("/payment");
   };
 
   const styles = {
@@ -193,7 +228,18 @@ export default function VelvetViper() {
         <div style={styles.navLinks}>
           <span style={styles.navLink} onClick={() => setPage("browse")}>Browse</span>
           <span style={styles.navLink} onClick={() => setPage("about")}>About</span>
-          <button style={styles.navCta} onClick={() => setPage("list")}>List a Reptile</button>
+          {user ? (
+            <>
+              <span style={styles.navLink} onClick={() => router.push("/my-listings")}>My Listings</span>
+              <button style={styles.navCta} onClick={() => setPage("list")}>List a Reptile</button>
+              <span style={styles.navLink} onClick={handleLogout}>Logout</span>
+            </>
+          ) : (
+            <>
+              <span style={styles.navLink} onClick={() => router.push("/login?redirect=" + encodeURIComponent("/?from=list"))}>Login</span>
+              <span style={styles.navLink} onClick={() => router.push("/signup")}>Signup</span>
+            </>
+          )}
         </div>
       </nav>
 
@@ -207,7 +253,18 @@ export default function VelvetViper() {
             <p style={styles.heroDesc}>VelvetViper connects responsible reptile owners with verified adopters across the region. No more Facebook groups. Just a proper platform built for the community.</p>
             <div style={styles.heroButtons}>
               <button style={styles.btnPrimary} onClick={() => setPage("browse")}>Browse Reptiles</button>
-              <button style={styles.btnOutline} onClick={() => setPage("list")}>List Your Reptile</button>
+              <button
+                style={styles.btnOutline}
+                onClick={() => {
+                  if (user) {
+                    setPage("list");
+                  } else {
+                    router.push("/login?redirect=" + encodeURIComponent("/?from=list"));
+                  }
+                }}
+              >
+                List Your Reptile
+              </button>
             </div>
           </div>
 
@@ -291,7 +348,16 @@ export default function VelvetViper() {
       {/* LIST */}
       {page === "list" && (
         <div style={styles.formPage}>
-          {submitted ? (
+          {!user ? (
+            <div style={styles.successBox}>
+              <div style={styles.successEmoji}>🔒</div>
+              <div style={styles.successTitle}>Login Required</div>
+              <p style={styles.successSub}>You must be logged in to list a reptile.</p>
+              <div style={{ marginTop: 32, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                <button style={styles.btnPrimary} onClick={() => router.push("/login?redirect=" + encodeURIComponent("/?from=list"))}>Go to Login</button>
+              </div>
+            </div>
+          ) : submitted ? (
             <div style={styles.successBox}>
               <div style={styles.successEmoji}>🐍</div>
               <div style={styles.successTitle}>Listing Submitted!</div>
@@ -324,6 +390,13 @@ export default function VelvetViper() {
                 </div>
               </div>
               <div style={styles.formGroup}>
+                <label style={styles.label}>Country *</label>
+                <select style={{ ...styles.input, cursor: "pointer" }} value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })}>
+                  <option value="">Select your country</option>
+                  {COUNTRY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div style={styles.formGroup}>
                 <label style={styles.label}>City / Location *</label>
                 <select style={{ ...styles.input, cursor: "pointer" }} value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}>
                   <option value="">Select your city</option>
@@ -338,7 +411,7 @@ export default function VelvetViper() {
                 <label style={styles.label}>WhatsApp / Contact *</label>
                 <input style={styles.input} placeholder="+237 or +234 number" value={formData.contact} onChange={e => setFormData({ ...formData, contact: e.target.value })} />
               </div>
-              <button style={{ ...styles.submitBtn, opacity: (!formData.species || !formData.location || !formData.contact) ? 0.4 : 1 }} onClick={handleSubmit} disabled={!formData.species || !formData.location || !formData.contact}>Submit Listing →</button>
+              <button style={{ ...styles.submitBtn, opacity: (!formData.species || !formData.location || !formData.contact || !formData.country) ? 0.4 : 1 }} onClick={handleStartPayment} disabled={!formData.species || !formData.location || !formData.contact || !formData.country}>Submit Listing →</button>
               <p style={{ fontSize: 11, color: "#444", marginTop: 16, textAlign: "center", letterSpacing: "0.1em" }}>FREE to list · Reviewed within 24hrs · No hidden fees</p>
             </>
           )}
@@ -364,7 +437,18 @@ export default function VelvetViper() {
           </div>
           <div style={{ marginTop: 48, display: "flex", gap: 16, flexWrap: "wrap" }}>
             <button style={styles.btnPrimary} onClick={() => setPage("browse")}>Browse Listings</button>
-            <button style={styles.btnOutline} onClick={() => setPage("list")}>List a Reptile</button>
+            <button
+              style={styles.btnOutline}
+              onClick={() => {
+                if (user) {
+                  setPage("list");
+                } else {
+                  router.push("/login?redirect=" + encodeURIComponent("/?from=list"));
+                }
+              }}
+            >
+              List a Reptile
+            </button>
           </div>
         </div>
       )}
