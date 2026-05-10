@@ -36,7 +36,7 @@ function PaymentContent() {
 
   const handleAlternativePayment = (method: string) => {
     const msg = `Hello, I just submitted a listing on VelvetViper and want to pay the fee (${curr.symbol}2) using ${method}. Please send me the payment details.`;
-    const whatsappUrl = `https://wa.me/+1234567890?text=${encodeURIComponent(msg)}`;
+    const whatsappUrl = `https://wa.me/+15056715584?text=${encodeURIComponent(msg)}`;
     window.open(whatsappUrl, "_blank");
   };
 
