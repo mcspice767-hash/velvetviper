@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function PaymentPage() {
+function PaymentContent() {
   const [listingData, setListingData] = useState<any>(null);
   const [selectedMethod, setSelectedMethod] = useState<string>("paystack");
   const [giftCode, setGiftCode] = useState("");
@@ -35,27 +35,71 @@ export default function PaymentPage() {
   const curr = getCurrency(listingData?.country);
 
   const handleAlternativePayment = (method: string) => {
-    const message = `Hello, I just submitted a listing on VelvetViper and want to pay the fee (${curr.symbol}2) using ${method}. Please send me the payment details.`;
-    const whatsappUrl = `https://wa.me/${listingData.contact.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const msg = `Hello, I just submitted a listing on VelvetViper and want to pay the fee (${curr.symbol}2) using ${method}. Please send me the payment details.`;
+    const whatsappUrl = `https://wa.me/+1234567890?text=${encodeURIComponent(msg)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const handlePaystackPayment = () => {
-    // Paystack logic (keep existing if you have the script loaded)
-    alert("Paystack popup would open here (implement PaystackPop if needed)");
+    alert("Paystack popup would open here");
   };
 
   const handleGiftCard = async () => {
-    // ... existing gift card logic
     if (!giftCode.trim()) {
       setMessage("Please enter a gift card code");
       return;
     }
-    setMessage("Gift card validation coming soon...");
+
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("gift_cards")
+      .select("*")
+      .eq("code", giftCode.toUpperCase())
+      .eq("used", false)
+      .single();
+
+    if (error || !data) {
+      setMessage("Invalid or already used gift card");
+      setLoading(false);
+      return;
+    }
+
+    await supabase
+      .from("gift_cards")
+      .update({ used: true, used_by: listingData?.contact })
+      .eq("id", data.id);
+
+    await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        giftCardCode: giftCode,
+        userEmail: listingData?.contact,
+        listingDetails: listingData,
+      }),
+    });
+
+    const { error: insertError } = await supabase.from("listings").insert({
+      ...listingData,
+      status: "pending",
+      payment_status: "paid",
+    });
+
+    if (insertError) {
+      setMessage("Error submitting listing: " + insertError.message);
+    } else {
+      setMessage("✅ Gift card accepted! Listing submitted for review.");
+      setTimeout(() => router.push("/"), 2500);
+    }
+    setLoading(false);
   };
 
   if (!listingData) {
-    return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">Loading payment page...</div>;
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">
+        Loading payment page...
+      </div>
+    );
   }
 
   return (
@@ -64,17 +108,13 @@ export default function PaymentPage() {
         <h1 className="text-4xl font-bold text-center mb-2">Complete Your Listing</h1>
         <p className="text-center text-gray-400 mb-10">Choose your preferred payment method</p>
 
-        {/* Listing Summary */}
         <div className="bg-[#111] border border-[#2a2a2a] rounded-3xl p-8 mb-10 text-center">
           <p className="text-xl">{listingData.species} — {listingData.location}</p>
-          <p className="text-3xl font-mono text-[#c8ff00] mt-4">
-            Listing Fee: {curr.symbol}2
-          </p>
+          <p className="text-3xl font-mono text-[#c8ff00] mt-4">Listing Fee: {curr.symbol}2</p>
         </div>
 
         <div className="space-y-6">
-          {/* Paystack Option */}
-          <div 
+          <div
             onClick={() => setSelectedMethod("paystack")}
             className={`border-2 rounded-3xl p-8 cursor-pointer transition-all ${selectedMethod === "paystack" ? "border-[#c8ff00]" : "border-[#2a2a2a]"}`}
           >
@@ -90,7 +130,6 @@ export default function PaymentPage() {
             </button>
           </div>
 
-          {/* Alternative Payment Methods */}
           <div className="bg-[#111] border border-[#2a2a2a] rounded-3xl p-8">
             <p className="text-[#c8ff00] font-medium mb-6">Other Payment Methods</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -99,7 +138,7 @@ export default function PaymentPage() {
                 { name: "Cash App", logo: "💵" },
                 { name: "Venmo", logo: "📱" },
                 { name: "Zelle", logo: "🏦" },
-                { name: "Apple Pay", logo: "" },
+                { name: "Apple Pay", logo: "🍎" },
                 { name: "Revolut", logo: "🔄" },
                 { name: "Chime", logo: "🏧" },
               ].map((method) => (
@@ -116,7 +155,6 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          {/* Gift Card Option */}
           <div className="bg-[#111] border border-[#2a2a2a] rounded-3xl p-8">
             <p className="text-[#c8ff00] font-medium mb-4">Have a Gift Card?</p>
             <input
@@ -128,15 +166,32 @@ export default function PaymentPage() {
             />
             <button
               onClick={handleGiftCard}
-              className="w-full bg-white/10 hover:bg-white/20 py-4 rounded-2xl font-medium"
+              disabled={loading}
+              className="w-full bg-white/10 hover:bg-white/20 py-4 rounded-2xl font-medium disabled:opacity-50"
             >
-              Redeem Gift Card
+              {loading ? "Validating..." : "Redeem Gift Card"}
             </button>
           </div>
         </div>
 
-        {message && <div className="mt-8 p-6 bg-[#1a1a1a] rounded-3xl text-center text-lg border border-[#c8ff00]/30">{message}</div>}
+        {message && (
+          <div className="mt-8 p-6 bg-[#1a1a1a] rounded-3xl text-center text-lg border border-[#c8ff00]/30">
+            {message}
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">
+        Loading payment...
+      </div>
+    }>
+      <PaymentContent />
+    </Suspense>
   );
 }
