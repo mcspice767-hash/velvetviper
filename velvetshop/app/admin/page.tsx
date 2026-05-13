@@ -257,13 +257,13 @@ export default function AdminPage() {
               </div>
             )}
 
-            <button
-              onClick={handleGenerateWithAI}
-              disabled={!postImageUrl || generatingAI}
-              className="w-full bg-purple-600 hover:bg-purple-700 py-4 rounded-2xl font-medium"
-            >
-              {generatingAI ? "🤖 Analyzing..." : "🤖 Generate with AI"}
-            </button>
+           <button
+  onClick={handleGenerateWithAI}
+  disabled={!postImageUrl || generatingAI}
+  className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 py-4 rounded-2xl font-medium transition flex items-center justify-center gap-2"
+>
+  {generatingAI ? "🤖 Analyzing Image..." : "🤖 Generate Details with AI"}
+</button>
 
             {/* Form Fields */}
             <input placeholder="Species *" value={postForm.species} onChange={(e) => setPostForm({ ...postForm, species: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
