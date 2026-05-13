@@ -24,6 +24,7 @@ export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -95,14 +96,22 @@ export default function Home() {
             <h1 className="text-3xl font-bold tracking-tight">VELVETVIPER</h1>
           </div>
 
-          <div className="flex items-center gap-8 text-sm">
+          <div className="hidden md:flex gap-8 text-sm">
             <Link href="/" className="hover:text-[#c8ff00]">Home</Link>
             <Link href="/list" className="hover:text-[#c8ff00]">List Reptile</Link>
             <Link href="/browse" className="hover:text-[#c8ff00]">Browse</Link>
             <Link href="/my-listings" className="hover:text-[#c8ff00]">My Listings</Link>
             <Link href="/login" className="hover:text-[#c8ff00]">Login</Link>
+          </div>
 
-            <button 
+          <div className="flex items-center gap-4">
+            <button
+              className="md:hidden text-2xl hover:text-[#c8ff00] transition"
+              onClick={() => setMenuOpen(true)}
+            >
+              ☰
+            </button>
+            <button
               onClick={() => setShowCart(!showCart)}
               className="relative text-2xl hover:text-[#c8ff00] transition"
             >
@@ -126,8 +135,18 @@ export default function Home() {
         ))}
       </div>
 
+      {menuOpen && (
+        <div className="fixed inset-0 bg-black/95 z-[200] flex flex-col items-center justify-center gap-8 p-8 text-center">
+          <button className="absolute top-6 right-6 text-3xl" onClick={() => setMenuOpen(false)}>✕</button>
+          <Link href="/" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Home</Link>
+          <Link href="/browse" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Browse</Link>
+          <Link href="/list" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>List Reptile</Link>
+          <Link href="/login" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Login</Link>
+        </div>
+      )}
+
       {/* Hero */}
-      <div className="max-w-5xl mx-auto text-center pt-24 pb-16 px-6">
+      <div className="max-w-5xl mx-auto text-center pt-24 pb-16 px-4 md:px-6">
         <h2 className="text-6xl md:text-7xl font-bold tracking-tighter mb-6">
           Rehome Reptiles.<br />Responsibly.
         </h2>
@@ -141,8 +160,8 @@ export default function Home() {
       {/* Categories */}
       <div className="max-w-7xl mx-auto px-6 pb-20">
         <div className="text-[#c8ff00] tracking-widest text-sm mb-3">EXPLORE</div>
-        <h3 className="text-4xl font-bold mb-10">Shop by Category</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <h3 className="text-4xl md:text-5xl font-bold mb-10">Shop by Category</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { emoji: "🐍", title: "Live Reptiles", desc: "Snakes, geckos, lizards & more" },
             { emoji: "🦗", title: "Food & Nutrition", desc: "Crickets, mice & feeders" },
@@ -162,8 +181,8 @@ export default function Home() {
 
       {/* Featured Listings */}
       <div className="max-w-7xl mx-auto px-6 pb-24">
-        <h3 className="text-4xl font-bold mb-8">Featured Reptiles</h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <h3 className="text-4xl md:text-5xl font-bold mb-8">Featured Reptiles</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredListings.slice(0, 9).map(listing => {
             const curr = getCurrency(listing.country);
             return (
