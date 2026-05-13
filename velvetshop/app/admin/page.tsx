@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { supabase } from "../../lib/supabase";
 
 const ADMIN_PASSWORD = "velvet2026";
@@ -9,6 +9,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "post">("pending");
+
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -25,6 +26,7 @@ export default function AdminPage() {
     contact: "",
   });
 
+  const [postImages, setPostImages] = useState<string[]>([]);
   const [postImageUrl, setPostImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
 
@@ -42,7 +44,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       localStorage.setItem("adminAuth", "true");
     } else {
-      alert("Wrong password");
+      alert("Incorrect password");
     }
   };
 
@@ -53,38 +55,46 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFolderUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "reptiles");
+    const uploaded: string[] = [];
 
-    try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formData }
-      );
-      const data = await res.json();
-      setPostImageUrl(data.secure_url);
-    } catch (err) {
-      alert("Upload failed");
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "reptiles");
+
+      try {
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          { method: "POST", body: formData }
+        );
+        const data = await res.json();
+        if (data.secure_url) uploaded.push(data.secure_url);
+      } catch (err) {
+        console.error("Upload failed");
+      }
     }
+
+    setPostImages(uploaded);
+    if (uploaded.length > 0) setPostImageUrl(uploaded[0]);
     setUploading(false);
   };
 
   const handlePostReptile = async () => {
-    if (!postForm.species || !postForm.location || !postForm.contact) {
-      alert("Please fill required fields");
+    if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
+      alert("Please fill all required fields (*)");
       return;
     }
 
     const { error } = await supabase.from("listings").insert({
       ...postForm,
       price: Number(postForm.price),
-      image_url: postImageUrl,
+      image_url: postImageUrl || null,
+      images: postImages,
       status: "approved",
       payment_status: "paid",
     });
@@ -92,11 +102,13 @@ export default function AdminPage() {
     if (error) {
       alert("Error: " + error.message);
     } else {
-      setSuccessMsg("Reptile posted successfully!");
-      fetchListings();
+      setSuccessMsg("✅ Reptile posted successfully and is now live!");
       // Reset form
       setPostForm({ species: "", name: "", age: "", country: "USA", location: "", price: "", description: "", contact: "" });
+      setPostImages([]);
       setPostImageUrl("");
+      fetchListings();
+
       setTimeout(() => setSuccessMsg(""), 3000);
     }
   };
@@ -108,10 +120,10 @@ export default function AdminPage() {
           <h1 className="text-3xl font-bold mb-8 text-center">Admin Login</h1>
           <input
             type="password"
-            placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 mb-6"
+            placeholder="Enter admin password"
           />
           <button onClick={login} className="w-full bg-[#c8ff00] text-black py-4 rounded-2xl font-bold">
             Login
@@ -123,34 +135,51 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0] p-6">
-      <h1 className="text-4xl font-bold mb-8">Admin Dashboard</h1>
+      <h1 className="text-4xl font-bold mb-8">VelvetViper Admin</h1>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-[#2a2a2a] mb-8 overflow-x-auto">
-        {["pending", "approved", "rejected", "post"].map((tab) => (
+      <div className="flex gap-2 border-b border-[#2a2a2a] mb-8 overflow-x-auto pb-1">
+        {["pending", "approved", "rejected", "post"].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
             className={`px-6 py-3 capitalize ${activeTab === tab ? "border-b-4 border-[#c8ff00] text-[#c8ff00]" : "text-gray-500"}`}
           >
-            {tab}
+            {tab === "post" ? "✚ Post Reptile" : tab}
           </button>
         ))}
       </div>
 
-      {/* Post Reptile Tab */}
       {activeTab === "post" && (
-        <div className="max-w-2xl mx-auto bg-[#111] border border-[#2a2a2a] rounded-3xl p-8">
-          <h2 className="text-3xl font-bold mb-6">Post New Reptile</h2>
+        <div className="max-w-2xl mx-auto bg-[#111] border border-[#2a2a2a] rounded-3xl p-8 space-y-6">
+          <h2 className="text-3xl font-bold">Post New Reptile</h2>
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="w-full bg-black border border-[#2a2a2a] rounded-2xl p-4 mb-6"
-          />
+          <div>
+            <label className="block text-sm mb-2">Upload Images / Folder</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              webkitdirectory
+              onChange={handleFolderUpload}
+              className="w-full bg-black border border-[#2a2a2a] rounded-2xl p-4"
+            />
+          </div>
 
-          {postImageUrl && <img src={postImageUrl} className="rounded-2xl mb-6 max-h-64 w-full object-cover" />}
+          {postImages.length > 0 && (
+            <div className="grid grid-cols-3 gap-3">
+              {postImages.map((url, i) => (
+                <div key={i} className="relative">
+                  <img src={url} className="rounded-xl w-full h-24 object-cover" />
+                  <button
+                    onClick={() => setPostImages(prev => prev.filter((_, idx) => idx !== i))}
+                    className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-6">
             <input
@@ -166,7 +195,7 @@ export default function AdminPage() {
               className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4"
             />
             <input
-              placeholder="Price"
+              placeholder="Price *"
               type="number"
               value={postForm.price}
               onChange={(e) => setPostForm({ ...postForm, price: e.target.value })}
@@ -187,7 +216,7 @@ export default function AdminPage() {
 
             <button
               onClick={handlePostReptile}
-              className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-xl"
+              className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-xl hover:bg-white transition"
             >
               Post Reptile Live
             </button>
@@ -195,7 +224,11 @@ export default function AdminPage() {
         </div>
       )}
 
-      {successMsg && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-8 py-4 rounded-2xl">{successMsg}</div>}
+      {successMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-8 py-4 rounded-2xl shadow-xl">
+          {successMsg}
+        </div>
+      )}
     </div>
   );
 }
