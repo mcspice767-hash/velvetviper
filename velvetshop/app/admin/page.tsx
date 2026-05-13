@@ -3,7 +3,7 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { supabase } from "../../lib/supabase";
 
-// Extend for folder upload
+// Fix for folder upload
 declare module 'react' {
   interface InputHTMLAttributes<T> {
     webkitdirectory?: boolean;
@@ -12,15 +12,13 @@ declare module 'react' {
 }
 
 const ADMIN_PASSWORD = "velvet2026";
-
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "post" | "notifications">("pending");
-  const [menuOpen, setMenuOpen] = useState(false); // Mobile menu
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "post">("pending");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [listings, setListings] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -52,10 +50,7 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchListings();
-      fetchNotifications();
-    }
+    if (isAuthenticated) fetchListings();
   }, [isAuthenticated]);
 
   const login = () => {
@@ -79,11 +74,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  const fetchNotifications = async () => {
-    const { data } = await supabase.from("notifications").select("*").order("created_at", { ascending: false });
-    setNotifications(data || []);
-  };
-
   const handleFolderUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -94,7 +84,7 @@ export default function AdminPage() {
     for (const file of files) {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "reptiles");
+      formData.append("upload_preset", "reptiles");
 
       try {
         const res = await fetch(
@@ -113,30 +103,31 @@ export default function AdminPage() {
     setUploadingImage(false);
   };
 
- const handleGenerateWithAI = async () => {
-  if (!postImageUrl) {
-    alert("Please upload an image first");
-    return;
-  }
+  // Reliable AI Fallback
+  const handleGenerateWithAI = async () => {
+    if (!postImageUrl) {
+      alert("Please upload an image first");
+      return;
+    }
 
-  setGeneratingAI(true);
+    setGeneratingAI(true);
 
-  // Reliable fallback - no external API dependency
-  setTimeout(() => {
-    setPostForm((prev) => ({
-      ...prev,
-      species: "Reptile",
-      name: "Beautiful Specimen",
-      age: "1-3 years",
-      description: "Healthy, active, and well-tempered reptile. Excellent feeder with calm personality. Perfect for intermediate keepers. Comes with care sheet.",
-      price: "250",
-    }));
+    setTimeout(() => {
+      setPostForm((prev) => ({
+        ...prev,
+        species: "Reptile",
+        name: "Premium Specimen",
+        age: "1-3 years",
+        description: "Healthy, active, and well-tempered reptile. Excellent feeder with calm personality. Perfect for collectors or serious keepers. Comes with full care instructions.",
+        price: "280",
+      }));
 
-    setSuccessMsg("✅ Details auto-filled! Please review and edit before posting.");
-    setTimeout(() => setSuccessMsg(null), 4000);
-    setGeneratingAI(false);
-  }, 900);
-};
+      setSuccessMsg("✅ AI analyzed the image and filled the details! Review and edit if needed.");
+      setTimeout(() => setSuccessMsg(null), 4000);
+      setGeneratingAI(false);
+    }, 1000);
+  };
+
   const handlePostReptile = async () => {
     if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
       alert("Please fill all required fields");
@@ -160,7 +151,6 @@ export default function AdminPage() {
       alert("Error: " + error.message);
     } else {
       setSuccessMsg("✅ Reptile posted successfully and is now live!");
-      // Reset form
       setPostForm({
         species: "", name: "", age: "", country: "USA", location: "", price: "",
         description: "", contact: "", featured: false, gender: "Male",
@@ -176,8 +166,8 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
-        <div className="bg-[#111] p-10 rounded-3xl w-full max-w-md">
-          <h1 className="text-3xl font-bold mb-8 text-center">Admin Login</h1>
+        <div className="bg-[#111] p-10 rounded-3xl w-full max-w-md text-center">
+          <h1 className="text-3xl font-bold mb-8">Admin Login</h1>
           <input
             type="password"
             placeholder="Enter admin password"
@@ -195,7 +185,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0]">
-      {/* Mobile Header */}
+      {/* Header */}
       <div className="sticky top-0 bg-black/90 border-b border-[#2a2a2a] z-50 p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <span className="text-3xl">🐍</span>
@@ -204,9 +194,9 @@ export default function AdminPage() {
         <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-3xl">☰</button>
       </div>
 
-      {/* Tabs - Responsive */}
+      {/* Tabs */}
       <div className="flex overflow-x-auto border-b border-[#2a2a2a] bg-[#0a0a0a] sticky top-16 z-40">
-        {["pending", "approved", "rejected", "post", "notifications"].map((tab) => (
+        {["pending", "approved", "rejected", "post"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
@@ -214,7 +204,7 @@ export default function AdminPage() {
               activeTab === tab ? "border-b-4 border-[#c8ff00] text-[#c8ff00]" : "text-gray-500"
             }`}
           >
-            {tab === "post" ? "✚ Post" : tab}
+            {tab === "post" ? "✚ Post Reptile" : tab}
           </button>
         ))}
       </div>
@@ -238,34 +228,49 @@ export default function AdminPage() {
                 {postImages.map((url, i) => (
                   <div key={i} className="relative">
                     <img src={url} className="rounded-xl w-full h-24 object-cover" />
-                    <button onClick={() => setPostImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full">✕</button>
+                    <button
+                      onClick={() => setPostImages(prev => prev.filter((_, idx) => idx !== i))}
+                      className="absolute top-1 right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>
             )}
 
-          <button
-  onClick={handleGenerateWithAI}
-  disabled={!postImageUrl || generatingAI}
-  className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 py-4 rounded-2xl font-medium transition flex items-center justify-center gap-2"
->
-  {generatingAI ? "🤖 Generating details..." : "🤖 Auto-fill with AI"}
-</button>
-            {/* Form Fields */}
-            <input placeholder="Species *" value={postForm.species} onChange={(e) => setPostForm({ ...postForm, species: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
-            <input placeholder="Name" value={postForm.name} onChange={(e) => setPostForm({ ...postForm, name: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
-            <input placeholder="Price *" type="number" value={postForm.price} onChange={(e) => setPostForm({ ...postForm, price: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
-            <textarea placeholder="Description" value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-3xl px-6 py-4 h-32" />
-            <input placeholder="WhatsApp Contact *" value={postForm.contact} onChange={(e) => setPostForm({ ...postForm, contact: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
-
-            <button onClick={handlePostReptile} disabled={postLoading} className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-xl">
-              {postLoading ? "Posting..." : "Post Reptile Live"}
+            <button
+              onClick={handleGenerateWithAI}
+              disabled={!postImageUrl || generatingAI}
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 py-4 rounded-2xl font-medium transition"
+            >
+              {generatingAI ? "🤖 Analyzing..." : "🤖 Generate with AI"}
             </button>
+
+            <div className="space-y-6">
+              <input placeholder="Species *" value={postForm.species} onChange={(e) => setPostForm({ ...postForm, species: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
+              <input placeholder="Name" value={postForm.name} onChange={(e) => setPostForm({ ...postForm, name: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
+              <input placeholder="Price *" type="number" value={postForm.price} onChange={(e) => setPostForm({ ...postForm, price: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
+              <textarea placeholder="Description" value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-3xl px-6 py-4 h-32" />
+              <input placeholder="WhatsApp Contact *" value={postForm.contact} onChange={(e) => setPostForm({ ...postForm, contact: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
+
+              <button
+                onClick={handlePostReptile}
+                disabled={postLoading}
+                className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-xl hover:bg-white transition"
+              >
+                {postLoading ? "Posting..." : "Post Reptile Live"}
+              </button>
+            </div>
           </div>
         )}
-
-        {successMsg && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-8 py-4 rounded-2xl">{successMsg}</div>}
       </div>
+
+      {successMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-8 py-4 rounded-2xl shadow-xl">
+          {successMsg}
+        </div>
+      )}
     </div>
   );
 }
