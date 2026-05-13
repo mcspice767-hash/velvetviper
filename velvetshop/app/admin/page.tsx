@@ -68,6 +68,7 @@ export default function AdminPage() {
   });
   const [postImageUrl, setPostImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
 
   useEffect(() => {
@@ -164,6 +165,66 @@ export default function AdminPage() {
       alert("Image upload failed");
     }
     setUploadingImage(false);
+  };
+
+  const handleGenerateWithAI = async () => {
+    if (!postImageUrl) return;
+    setGeneratingAI(true);
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY || "",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image",
+                  source: {
+                    type: "url",
+                    url: postImageUrl,
+                  },
+                },
+                {
+                  type: "text",
+                  text: `You are a reptile expert. Analyze this reptile image and respond ONLY with a JSON object (no markdown, no backticks) with these fields:
+{
+  "species": "exact species name",
+  "name": "a cool reptile name",
+  "age": "estimated age range",
+  "price": 250,
+  "description": "2-3 sentences about temperament, care requirements, feeding, and why someone would want this reptile"
+}`,
+                },
+              ],
+            },
+          ],
+        }),
+      });
+      const data = await response.json();
+      const text = data.content[0].text;
+      const parsed = JSON.parse(text);
+      setPostForm((prev) => ({
+        ...prev,
+        species: parsed.species || prev.species,
+        name: parsed.name || prev.name,
+        age: parsed.age || prev.age,
+        price: String(parsed.price) || prev.price,
+        description: parsed.description || prev.description,
+      }));
+      setSuccessMsg("✅ AI filled the details! Review and edit if needed.");
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (error) {
+      console.error("AI generation failed:", error);
+      alert("AI analysis failed. Please fill the details manually.");
+    }
+    setGeneratingAI(false);
   };
 
   const handlePostReptile = async () => {
@@ -406,7 +467,16 @@ export default function AdminPage() {
                 />
                 {uploadingImage && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
                 {postImageUrl && (
-                  <img src={postImageUrl} alt="preview" className="mt-4 rounded-2xl max-h-48 object-cover" />
+                  <div className="mt-4 space-y-3">
+                    <img src={postImageUrl} alt="preview" className="rounded-2xl max-h-48 object-cover" />
+                    <button
+                      onClick={handleGenerateWithAI}
+                      disabled={generatingAI}
+                      className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-900 text-white px-6 py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
+                    >
+                      {generatingAI ? "🤖 Analyzing image..." : "🤖 Generate with AI"}
+                    </button>
+                  </div>
                 )}
               </div>
 
