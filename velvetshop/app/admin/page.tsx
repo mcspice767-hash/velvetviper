@@ -3,6 +3,14 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { supabase } from "../../lib/supabase";
 
+// Extend HTMLInputElement to support folder upload
+declare module 'react' {
+  interface InputHTMLAttributes<T> {
+    webkitdirectory?: boolean;
+    directory?: boolean;
+  }
+}
+
 const ADMIN_PASSWORD = "velvet2026";
 
 export default function AdminPage() {
@@ -50,7 +58,10 @@ export default function AdminPage() {
 
   const fetchListings = async () => {
     setLoading(true);
-    const { data } = await supabase.from("listings").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("listings")
+      .select("*")
+      .order("created_at", { ascending: false });
     setListings(data || []);
     setLoading(false);
   };
@@ -75,7 +86,7 @@ export default function AdminPage() {
         const data = await res.json();
         if (data.secure_url) uploaded.push(data.secure_url);
       } catch (err) {
-        console.error("Upload failed");
+        console.error("Upload failed for", file.name);
       }
     }
 
@@ -86,7 +97,7 @@ export default function AdminPage() {
 
   const handlePostReptile = async () => {
     if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
-      alert("Please fill all required fields (*)");
+      alert("Please fill all required fields");
       return;
     }
 
@@ -102,13 +113,12 @@ export default function AdminPage() {
     if (error) {
       alert("Error: " + error.message);
     } else {
-      setSuccessMsg("✅ Reptile posted successfully and is now live!");
+      setSuccessMsg("✅ Reptile posted successfully!");
       // Reset form
       setPostForm({ species: "", name: "", age: "", country: "USA", location: "", price: "", description: "", contact: "" });
       setPostImages([]);
       setPostImageUrl("");
       fetchListings();
-
       setTimeout(() => setSuccessMsg(""), 3000);
     }
   };
@@ -116,14 +126,14 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
-        <div className="bg-[#111] p-10 rounded-3xl w-full max-w-md">
-          <h1 className="text-3xl font-bold mb-8 text-center">Admin Login</h1>
+        <div className="bg-[#111] p-10 rounded-3xl w-full max-w-md text-center">
+          <h1 className="text-3xl font-bold mb-8">Admin Login</h1>
           <input
             type="password"
+            placeholder="Enter admin password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 mb-6"
-            placeholder="Enter admin password"
           />
           <button onClick={login} className="w-full bg-[#c8ff00] text-black py-4 rounded-2xl font-bold">
             Login
@@ -137,8 +147,8 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0] p-6">
       <h1 className="text-4xl font-bold mb-8">VelvetViper Admin</h1>
 
-      <div className="flex gap-2 border-b border-[#2a2a2a] mb-8 overflow-x-auto pb-1">
-        {["pending", "approved", "rejected", "post"].map(tab => (
+      <div className="flex gap-2 border-b border-[#2a2a2a] mb-8 overflow-x-auto">
+        {["pending", "approved", "rejected", "post"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
@@ -172,7 +182,7 @@ export default function AdminPage() {
                   <img src={url} className="rounded-xl w-full h-24 object-cover" />
                   <button
                     onClick={() => setPostImages(prev => prev.filter((_, idx) => idx !== i))}
-                    className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5"
+                    className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center"
                   >
                     ✕
                   </button>
