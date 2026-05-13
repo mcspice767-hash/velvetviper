@@ -98,7 +98,6 @@ export default function Home() {
 
           <div className="hidden md:flex gap-8 text-sm">
             <Link href="/" className="hover:text-[#c8ff00]">Home</Link>
-            <Link href="/list" className="hover:text-[#c8ff00]">List Reptile</Link>
             <Link href="/browse" className="hover:text-[#c8ff00]">Browse</Link>
             <Link href="/my-listings" className="hover:text-[#c8ff00]">My Listings</Link>
             <Link href="/login" className="hover:text-[#c8ff00]">Login</Link>
@@ -140,7 +139,6 @@ export default function Home() {
           <button className="absolute top-6 right-6 text-3xl" onClick={() => setMenuOpen(false)}>✕</button>
           <Link href="/" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link href="/browse" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Browse</Link>
-          <Link href="/list" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>List Reptile</Link>
           <Link href="/login" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Login</Link>
         </div>
       )}
@@ -152,8 +150,7 @@ export default function Home() {
         </h2>
         <p className="text-xl text-gray-400">Premium marketplace for UK, USA & Canada</p>
         <div className="mt-10 flex gap-4 justify-center">
-          <Link href="/list" className="bg-[#c8ff00] text-black px-10 py-4 rounded-full font-semibold hover:bg-white transition">List a Reptile</Link>
-          <Link href="/browse" className="border border-[#c8ff00] px-10 py-4 rounded-full hover:bg-white/10 transition">Browse All</Link>
+          <Link href="/browse" className="bg-[#c8ff00] text-black px-10 py-4 rounded-full font-semibold hover:bg-white transition">Browse Reptiles</Link>
         </div>
       </div>
 
