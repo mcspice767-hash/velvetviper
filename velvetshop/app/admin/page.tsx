@@ -4,6 +4,12 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+declare module 'react' {
+  interface InputHTMLAttributes<T> {
+    webkitdirectory?: boolean;
+  }
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -70,6 +76,8 @@ export default function AdminPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
+  const [postImages, setPostImages] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
 
   useEffect(() => {
     const saved = localStorage.getItem("adminAuth");
@@ -147,24 +155,37 @@ export default function AdminPage() {
     fetchNotifications();
   };
 
-  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFolderUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
     setUploadingImage(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "reptiles");
-    try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formData }
-      );
-      const data = await res.json();
-      if (data.secure_url) setPostImageUrl(data.secure_url);
-    } catch {
-      alert("Image upload failed");
+    setUploadProgress(`Uploading 0 of ${files.length} images...`);
+    const uploadedUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploadProgress(`Uploading ${i + 1} of ${files.length} images...`);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "reptiles");
+
+      try {
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          { method: "POST", body: formData }
+        );
+        const data = await res.json();
+        if (data.secure_url) uploadedUrls.push(data.secure_url);
+      } catch {
+        console.error("Failed to upload", file.name);
+      }
     }
+
+    setPostImages(uploadedUrls);
+    if (uploadedUrls.length > 0) setPostImageUrl(uploadedUrls[0]);
     setUploadingImage(false);
+    setUploadProgress("");
   };
 
   const handleGenerateWithAI = async () => {
@@ -242,7 +263,8 @@ export default function AdminPage() {
       price: Number(postForm.price),
       description: postForm.description || null,
       contact: postForm.contact,
-      image_url: postImageUrl || null,
+      image_url: postImages[0] || null,
+      images: postImages,
       featured: postForm.featured,
       status: "approved",
       payment_status: "paid",
@@ -254,6 +276,7 @@ export default function AdminPage() {
       setSuccessMsg("✅ Reptile posted successfully and is now live!");
       setPostForm({ species: "", name: "", age: "", country: "USA", location: "", price: "", description: "", contact: "", featured: false });
       setPostImageUrl("");
+      setPostImages([]);
       fetchListings();
       setTimeout(() => setSuccessMsg(null), 3000);
     }
@@ -458,17 +481,36 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Upload Photo</label>
+                <label className="block text-sm text-gray-400 mb-2">Upload Photo Folder</label>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleImageUpload}
+                  multiple
+                  webkitdirectory
+                  onChange={handleFolderUpload}
                   className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 text-[#e8e0d0]"
                 />
-                {uploadingImage && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
-                {postImageUrl && (
+                {uploadingImage && <p className="text-sm text-gray-400 mt-2">{uploadProgress}</p>}
+                {postImages.length > 0 && (
                   <div className="mt-4 space-y-3">
-                    <img src={postImageUrl} alt="preview" className="rounded-2xl max-h-48 object-cover" />
+                    <div className="grid grid-cols-3 gap-3">
+                      {postImages.map((url, i) => (
+                        <div key={i} className="relative">
+                          <img src={url} className="rounded-xl w-full h-24 object-cover" />
+                          {i === 0 && (
+                            <span className="absolute top-1 left-1 bg-[#c8ff00] text-black text-xs px-2 py-0.5 rounded-full">
+                              Cover
+                            </span>
+                          )}
+                          <button
+                            onClick={() => setPostImages(prev => prev.filter((_, idx) => idx !== i))}
+                            className="absolute top-1 right-1 bg-red-600 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                     <button
                       onClick={handleGenerateWithAI}
                       disabled={generatingAI}
