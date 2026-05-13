@@ -14,6 +14,10 @@ interface Listing {
   image_url?: string;
   status: string;
   contact?: string;
+  gender?: string;
+  health?: string;
+  availability?: string;
+  description?: string;
 }
 
 interface CartItem extends Listing {
@@ -183,28 +187,32 @@ export default function Home() {
           {filteredListings.slice(0, 9).map(listing => {
             const curr = getCurrency(listing.country);
             return (
-              <div key={listing.id} className="bg-[#111] border border-[#2a2a2a] rounded-3xl overflow-hidden hover:border-[#c8ff00] transition group">
-                <div className="h-64 bg-black relative">
-                  {listing.image_url ? (
-                    <img src={listing.image_url} alt={listing.species} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-8xl h-full flex items-center justify-center opacity-50">🐍</div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <h4 className="text-2xl font-bold">{listing.species}</h4>
-                  <p className="text-gray-400 mt-1">{listing.location}</p>
-
-                  <div className="flex items-center justify-between mt-6">
-                    <span className="text-3xl font-mono text-[#c8ff00]">
-                      {curr}{listing.price}
-                    </span>
-                    <button
-                      onClick={() => addToCart(listing)}
-                      className="bg-[#c8ff00] hover:bg-white text-black px-6 py-3 rounded-2xl font-medium transition"
-                    >
-                      Add to Cart
-                    </button>
+              <div key={listing.id} className="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition group cursor-pointer" onClick={() => setSelectedListing(listing)}>
+                <div className="flex gap-4">
+                  <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    {listing.image_url ? (
+                      <img src={listing.image_url} alt={listing.species} className="w-full h-full object-cover rounded-2xl" />
+                    ) : (
+                      <div className="text-gray-400 text-2xl">🐍</div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-bold text-lg text-black">{listing.species}</h3>
+                        <p className="text-gray-600 text-sm">{listing.name || "Unnamed"}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-black font-bold text-lg">{curr}{listing.price}</div>
+                        <div className="text-gray-500 text-xs">{listing.location}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mb-3">
+                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{listing.gender || "Unknown"}</span>
+                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{listing.health || "Healthy"}</span>
+                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{listing.availability || "Available"}</span>
+                    </div>
+                    <p className="text-gray-600 text-sm line-clamp-2">{listing.description || "No description available."}</p>
                   </div>
                 </div>
               </div>
@@ -251,6 +259,60 @@ export default function Home() {
           )}
         </div>
       )}
+
+      {/* Listing Modal */}
+      {showModal && selectedListing && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] p-4" onClick={() => setShowModal(false)}>
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="p-8">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-3xl font-bold text-black">{selectedListing.species}</h2>
+                <button onClick={() => setShowModal(false)} className="text-3xl text-gray-400 hover:text-black">✕</button>
+              </div>
+
+              <div className="flex gap-6 mb-6">
+                <div className="w-48 h-48 bg-gray-100 rounded-2xl flex items-center justify-center">
+                  {selectedListing.image_url ? (
+                    <img src={selectedListing.image_url} alt={selectedListing.species} className="w-full h-full object-cover rounded-2xl" />
+                  ) : (
+                    <div className="text-gray-400 text-6xl">🐍</div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="font-bold text-xl text-black">{selectedListing.species}</h3>
+                      <p className="text-gray-600">{selectedListing.name || "Unnamed"}</p>
+                      <p className="text-gray-500 text-sm">{selectedListing.location}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-black font-bold text-2xl">{getCurrency(selectedListing.country)}{selectedListing.price}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mb-4">
+                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">{selectedListing.gender || "Unknown"}</span>
+                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">{selectedListing.health || "Healthy"}</span>
+                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">{selectedListing.availability || "Available"}</span>
+                  </div>
+                  {selectedListing.description && (
+                    <p className="text-gray-700 mb-4">{selectedListing.description}</p>
+                  )}
+                  <button
+                    onClick={() => {
+                      addToCart(selectedListing);
+                      setShowModal(false);
+                    }}
+                    className="w-full bg-[#c8ff00] hover:bg-black hover:text-[#c8ff00] text-black px-6 py-3 rounded-2xl font-medium transition"
+                  >
+                    Add to Cart - {getCurrency(selectedListing.country)}{selectedListing.price}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

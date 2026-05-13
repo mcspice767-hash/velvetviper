@@ -71,6 +71,9 @@ export default function AdminPage() {
     description: "",
     contact: "",
     featured: false,
+    gender: "Male",
+    health: "Vaccinated",
+    availability: "Available",
   });
   const [postImageUrl, setPostImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -266,6 +269,9 @@ export default function AdminPage() {
       image_url: postImages[0] || null,
       images: postImages,
       featured: postForm.featured,
+      gender: postForm.gender,
+      health: postForm.health,
+      availability: postForm.availability,
       status: "approved",
       payment_status: "paid",
     });
@@ -274,7 +280,7 @@ export default function AdminPage() {
       alert("Error: " + error.message);
     } else {
       setSuccessMsg("✅ Reptile posted successfully and is now live!");
-      setPostForm({ species: "", name: "", age: "", country: "USA", location: "", price: "", description: "", contact: "", featured: false });
+      setPostForm({ species: "", name: "", age: "", country: "USA", location: "", price: "", description: "", contact: "", featured: false, gender: "Male", health: "Vaccinated", availability: "Available" });
       setPostImageUrl("");
       setPostImages([]);
       fetchListings();
@@ -480,6 +486,45 @@ export default function AdminPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Gender</label>
+                  <select
+                    value={postForm.gender}
+                    onChange={(e) => setPostForm({ ...postForm, gender: e.target.value })}
+                    className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 focus:outline-none focus:border-[#c8ff00] text-[#e8e0d0]"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Unknown">Unknown</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Health Status</label>
+                  <select
+                    value={postForm.health}
+                    onChange={(e) => setPostForm({ ...postForm, health: e.target.value })}
+                    className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 focus:outline-none focus:border-[#c8ff00] text-[#e8e0d0]"
+                  >
+                    <option value="Vaccinated">Vaccinated</option>
+                    <option value="Healthy">Healthy</option>
+                    <option value="Needs Care">Needs Care</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Availability</label>
+                  <select
+                    value={postForm.availability}
+                    onChange={(e) => setPostForm({ ...postForm, availability: e.target.value })}
+                    className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 focus:outline-none focus:border-[#c8ff00] text-[#e8e0d0]"
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Reserved">Reserved</option>
+                    <option value="Sold">Sold</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Upload Photo Folder</label>
                 <input
@@ -520,6 +565,40 @@ export default function AdminPage() {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* LIVE PREVIEW */}
+              <div className="mt-8">
+                <div className="text-[#c8ff00] text-sm tracking-widest mb-4">LIVE PREVIEW</div>
+                <div className="bg-white rounded-3xl p-6 shadow-lg">
+                  <div className="flex gap-4">
+                    <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center">
+                      {postImages[0] ? (
+                        <img src={postImages[0]} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
+                      ) : (
+                        <div className="text-gray-400 text-xs">No image</div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-bold text-lg text-black">{postForm.species || "Species"}</h3>
+                          <p className="text-gray-600 text-sm">{postForm.name || "Name"}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-black font-bold text-lg">${postForm.price || "0"}</div>
+                          <div className="text-gray-500 text-xs">{postForm.location || "Location"}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mb-3">
+                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{postForm.gender || "Gender"}</span>
+                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{postForm.health || "Health"}</span>
+                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{postForm.availability || "Available"}</span>
+                      </div>
+                      <p className="text-gray-600 text-sm line-clamp-2">{postForm.description || "Description will appear here..."}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
