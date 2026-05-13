@@ -113,43 +113,43 @@ export default function AdminPage() {
     setUploadingImage(false);
   };
 
-  // Hugging Face AI Analysis
-  const handleGenerateWithAI = async () => {
-    if (!postImageUrl) {
-      alert("Please upload an image first");
-      return;
-    }
+ const handleGenerateWithAI = async () => {
+  if (!postImageUrl) {
+    alert("Please upload an image first");
+    return;
+  }
 
-    setGeneratingAI(true);
+  setGeneratingAI(true);
 
-    try {
-      const response = await fetch(
-        "https://api-inference.huggingface.co/models/google/vit-base-patch16-224",
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY}`,
-          },
-          method: "POST",
-          body: JSON.stringify({ url: postImageUrl }),
-        }
-      );
+  try {
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/google/vit-base-patch16-224",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY}`,
+        },
+        method: "POST",
+        body: JSON.stringify({ url: postImageUrl }),
+      }
+    );
 
-      // Fallback AI response (since image models are limited)
-      setPostForm((prev) => ({
-        ...prev,
-        species: "Reptile",
-        description: "Healthy and active reptile. Good temperament. Suitable for experienced keepers. Requires proper heating and UVB lighting.",
-        price: "250",
-      }));
+    // Fallback response (image models are limited)
+    setPostForm((prev) => ({
+      ...prev,
+      species: "Reptile",
+      description: "Healthy and active reptile. Good temperament. Suitable for intermediate keepers with proper setup.",
+      price: "250",
+    }));
 
-      setSuccessMsg("✅ AI analyzed the image! You can edit the details.");
-      setTimeout(() => setSuccessMsg(null), 4000);
-    } catch (error) {
-      alert("AI analysis failed. Please fill details manually.");
-    }
-    setGeneratingAI(false);
-  };
+    setSuccessMsg("✅ AI analyzed the image! Review and edit below.");
+    setTimeout(() => setSuccessMsg(null), 4000);
+  } catch (error) {
+    console.error(error);
+    alert("AI analysis failed. Please fill the details manually.");
+  }
 
+  setGeneratingAI(false);
+};
   const handlePostReptile = async () => {
     if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
       alert("Please fill all required fields");
