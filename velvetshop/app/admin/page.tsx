@@ -28,7 +28,6 @@ export default function AdminPage() {
     species: "",
     name: "",
     age: "",
-    country: "USA",
     location: "",
     price: "",
     description: "",
@@ -129,7 +128,7 @@ export default function AdminPage() {
 
 Analyze this reptile photo and respond **ONLY** with a valid JSON object (no markdown, no explanation).
 
-Country for pricing: ${postForm.country}
+Country for pricing: USA
 
 JSON format:
 {
@@ -182,6 +181,7 @@ JSON format:
       price: String(parsed.price) || prev.price,
       gender: parsed.gender || prev.gender,
       health: parsed.health || prev.health,
+      availability: parsed.availability || prev.availability,
       description: parsed.description || prev.description,
     }));
 
@@ -206,6 +206,7 @@ JSON format:
 
     const { error } = await supabase.from("listings").insert({
       ...postForm,
+      country: "USA",
       price: Number(postForm.price),
       image_url: postImageUrl || null,
       images: postImages,
@@ -220,7 +221,7 @@ JSON format:
     } else {
       setSuccessMsg("✅ Reptile posted successfully and is now live!");
       setPostForm({
-        species: "", name: "", age: "", country: "USA", location: "", price: "",
+        species: "", name: "", age: "", location: "", price: "",
         description: "", contact: "", featured: false, gender: "Male",
         health: "Vaccinated", availability: "Available"
       });
@@ -312,6 +313,19 @@ JSON format:
               <input placeholder="Species *" value={postForm.species} onChange={(e) => setPostForm({ ...postForm, species: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
               <input placeholder="Name" value={postForm.name} onChange={(e) => setPostForm({ ...postForm, name: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
               <input placeholder="Price *" type="number" value={postForm.price} onChange={(e) => setPostForm({ ...postForm, price: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
+              <div className="flex flex-col gap-3">
+                <span className="text-sm text-gray-400">Availability</span>
+                <button
+                  type="button"
+                  onClick={() => setPostForm({
+                    ...postForm,
+                    availability: postForm.availability === "Available" ? "Off" : "Available",
+                  })}
+                  className={`w-full py-4 rounded-2xl font-semibold transition ${postForm.availability === "Available" ? "bg-green-600 text-black hover:bg-green-500" : "bg-gray-800 text-white hover:bg-gray-700"}`}
+                >
+                  {postForm.availability === "Available" ? "Available" : "Off"}
+                </button>
+              </div>
               <textarea placeholder="Description" value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-3xl px-6 py-4 h-32" />
               <input placeholder="WhatsApp Contact *" value={postForm.contact} onChange={(e) => setPostForm({ ...postForm, contact: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
 
