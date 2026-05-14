@@ -28,7 +28,6 @@ export default function AdminPage() {
     species: "",
     name: "",
     age: "",
-    location: "",
     price: "",
     description: "",
     contact: "",
@@ -198,7 +197,7 @@ JSON format:
 
   const handlePostReptile = async () => {
     if (!postForm.species || !postForm.contact || !postForm.price) {
-      alert("Please fill all required fields");
+      alert("Please enter species, price, and WhatsApp contact.");
       return;
     }
 
@@ -220,7 +219,7 @@ JSON format:
     } else {
       setSuccessMsg("✅ Reptile posted successfully and is now live!");
       setPostForm({
-        species: "", name: "", age: "", location: "", price: "",
+        species: "", name: "", age: "", price: "",
         description: "", contact: "", featured: false, gender: "Male",
         health: "Vaccinated", availability: "Available"
       });
