@@ -28,7 +28,6 @@ export default function AdminPage() {
     species: "",
     name: "",
     age: "",
-    location: "",
     price: "",
     description: "",
     contact: "",
@@ -197,7 +196,7 @@ JSON format:
 };
 
   const handlePostReptile = async () => {
-    if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
+    if (!postForm.species || !postForm.contact || !postForm.price) {
       alert("Please fill all required fields");
       return;
     }
@@ -206,7 +205,6 @@ JSON format:
 
     const { error } = await supabase.from("listings").insert({
       ...postForm,
-      country: "USA",
       price: Number(postForm.price),
       image_url: postImageUrl || null,
       images: postImages,
@@ -221,7 +219,7 @@ JSON format:
     } else {
       setSuccessMsg("✅ Reptile posted successfully and is now live!");
       setPostForm({
-        species: "", name: "", age: "", location: "", price: "",
+        species: "", name: "", age: "", price: "",
         description: "", contact: "", featured: false, gender: "Male",
         health: "Vaccinated", availability: "Available"
       });
