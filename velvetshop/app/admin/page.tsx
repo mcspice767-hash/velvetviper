@@ -12,6 +12,7 @@ declare module 'react' {
 }
 
 const ADMIN_PASSWORD = "velvet2026";
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -41,9 +42,8 @@ export default function AdminPage() {
   const [postImages, setPostImages] = useState<string[]>([]);
   const [postImageUrl, setPostImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [aiSuccess, setAiSuccess] = useState<string | null>(null);
   const [postLoading, setPostLoading] = useState(false);
 
   useEffect(() => {
@@ -105,140 +105,96 @@ export default function AdminPage() {
     setUploadingImage(false);
   };
 
-  const generateWithAI = async () => {
-    if (!postImageUrl) {
-      alert("Please upload an image first");
-      return;
-    }
+  // Improved AI Generation
+  const handleGenerateWithAI = async () => {
+  if (!postImageUrl) {
+    alert("Please upload an image first");
+    return;
+  }
 
-    setAiLoading(true);
-    setAiError(null);
+  setGeneratingAI(true);
+  setAiError(null);
 
-    try {
-      const imageResponse = await fetch(postImageUrl);
-      const imageBlob = await imageResponse.blob();
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          resolve(result.split(",")[1]);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(imageBlob);
-      });
+  try {
+    // Get image as base64
+    const imageResponse = await fetch(postImageUrl);
+    const imageBlob = await imageResponse.blob();
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+      reader.readAsDataURL(imageBlob);
+    });
 
-      const mimeType = imageBlob.type || "image/jpeg";
+    const prompt = `You are a professional reptile expert and pet appraiser.
 
-      const prompt = `You are an expert reptile specialist and pet appraiser.
+Analyze this reptile photo and respond **ONLY** with a valid JSON object (no markdown, no explanation).
 
-Analyze this reptile image carefully and respond ONLY with a valid JSON object — no markdown, no backticks, no explanation.
-
-Use this country for pricing: ${postForm.country}
-
-Pricing guide:
-- UK: price in GBP (£)
-- USA: price in USD ($)  
-- Canada: price in CAD (CA$)
+Country for pricing: ${postForm.country}
 
 JSON format:
 {
-  "species": "full scientific and common species name e.g. Ball Python (Python regius)",
-  "name": "a creative memorable pet name that suits this reptile appearance e.g. Obsidian, Eclipse, Pharaoh",
-  "age": "approximate age based on size and appearance e.g. 8-12 months, 2-3 years",
-  "price": 250,
+  "species": "exact species name e.g. Ball Python (Python regius)",
+  "name": "creative pet name that fits the appearance",
+  "age": "estimated age range e.g. 1-2 years",
+  "price": number (realistic market price),
   "gender": "Male or Female or Unknown",
-  "health": "Healthy or Vaccinated or Needs Care",
-  "availability": "Available",
-  "description": "Write 3 convincing sentences about this specific reptile. Include: (1) personality and temperament based on species, (2) care requirements and feeding habits, (3) why this would make an amazing pet. Make it sound natural and appealing to a buyer."
+  "health": "Healthy / Vaccinated / Needs Care",
+  "description": "3-4 convincing, natural sentences about this specific reptile's personality, care needs, and why someone would want it as a pet."
 }`;
 
-      const requestBody = {
-        contents: [
-          {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
             parts: [
+              { text: prompt },
               {
                 inline_data: {
-                  mime_type: mimeType,
-                  data: base64,
+                  mime_type: "image/jpeg",
+                  data: base64
                 }
-              },
-              { text: prompt }
+              }
             ]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800,
           }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      };
-
-      // Retry logic with exponential backoff
-      let response;
-      let lastError;
-      const maxRetries = 3;
-
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(requestBody)
-            }
-          );
-
-          if (response.status === 429) {
-            // Rate limited - wait and retry
-            const waitTime = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
-            console.log(`Rate limited. Waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}...`);
-            setAiError(`Rate limited. Retrying in ${waitTime / 1000}s... (${attempt + 1}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            continue;
-          }
-
-          if (!response.ok) {
-            throw new Error("Gemini API error: " + response.status);
-          }
-
-          // Success - break out of retry loop
-          break;
-        } catch (err) {
-          lastError = err;
-          if (attempt === maxRetries - 1) throw err;
-        }
+        })
       }
+    );
 
-      if (!response || !response.ok) {
-        throw new Error("Failed to get valid response from Gemini API");
-      }
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
+    // Clean and parse JSON
+    const cleanText = text.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleanText);
 
-      setPostForm(prev => ({
-        ...prev,
-        species: parsed.species || prev.species,
-        name: parsed.name || prev.name,
-        age: parsed.age || prev.age,
-        price: String(parsed.price) || prev.price,
-        description: parsed.description || prev.description,
-        gender: parsed.gender || prev.gender,
-        health: parsed.health || prev.health,
-        availability: parsed.availability || prev.availability,
-      }));
+    setPostForm((prev) => ({
+      ...prev,
+      species: parsed.species || prev.species,
+      name: parsed.name || prev.name,
+      age: parsed.age || prev.age,
+      price: String(parsed.price) || prev.price,
+      gender: parsed.gender || prev.gender,
+      health: parsed.health || prev.health,
+      description: parsed.description || prev.description,
+    }));
 
-      setAiSuccess("✅ AI generated all details! Review and edit if needed.");
-      setTimeout(() => setAiSuccess(null), 4000);
-    } catch (err) {
-      console.error(err);
-      setAiError("AI analysis failed: " + (err instanceof Error ? err.message : "Unknown error"));
-    }
+    setSuccessMsg(`✅ Gemini AI successfully analyzed the image!`);
+    setTimeout(() => setSuccessMsg(null), 4000);
 
-    setAiLoading(false);
-  };
+  } catch (err: any) {
+    console.error(err);
+    setAiError("Gemini API failed. Please fill manually.");
+  }
+
+  setGeneratingAI(false);
+};
 
   const handlePostReptile = async () => {
     if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
@@ -297,7 +253,6 @@ JSON format:
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0]">
-      {/* Header */}
       <div className="sticky top-0 bg-black/90 border-b border-[#2a2a2a] z-50 p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <span className="text-3xl">🐍</span>
@@ -306,7 +261,6 @@ JSON format:
         <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-3xl">☰</button>
       </div>
 
-      {/* Tabs */}
       <div className="flex overflow-x-auto border-b border-[#2a2a2a] bg-[#0a0a0a] sticky top-16 z-40">
         {["pending", "approved", "rejected", "post"].map((tab) => (
           <button
@@ -340,37 +294,19 @@ JSON format:
                 {postImages.map((url, i) => (
                   <div key={i} className="relative">
                     <img src={url} className="rounded-xl w-full h-24 object-cover" />
-                    <button
-                      onClick={() => setPostImages(prev => prev.filter((_, idx) => idx !== i))}
-                      className="absolute top-1 right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
-                    >
-                      ✕
-                    </button>
+                    <button onClick={() => setPostImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">✕</button>
                   </div>
                 ))}
               </div>
             )}
 
-            {postImageUrl && (
-              <div className="mt-4 space-y-3">
-                <button
-                  onClick={generateWithAI}
-                  disabled={aiLoading}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-50 flex items-center justify-center gap-3"
-                >
-                  {aiLoading ? (
-                    <>
-                      <span className="animate-spin">⚙️</span>
-                      Analyzing image...
-                    </>
-                  ) : (
-                    <>🤖 Generate Details with AI</>
-                  )}
-                </button>
-                {aiError && <p className="text-red-400 text-sm text-center">{aiError}</p>}
-                {aiSuccess && <p className="text-green-400 text-sm text-center">{aiSuccess}</p>}
-              </div>
-            )}
+            <button
+              onClick={handleGenerateWithAI}
+              disabled={!postImageUrl || generatingAI}
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 py-4 rounded-2xl font-medium transition flex items-center justify-center gap-2"
+            >
+              {generatingAI ? "🤖 Analyzing Image..." : "🤖 AI Detect Species & Generate Info"}
+            </button>
 
             <div className="space-y-6">
               <input placeholder="Species *" value={postForm.species} onChange={(e) => setPostForm({ ...postForm, species: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
