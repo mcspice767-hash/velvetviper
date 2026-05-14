@@ -277,7 +277,7 @@ JSON format:
 
       <div className="p-6 max-w-7xl mx-auto">
         {activeTab === "post" && (
-          <div className="max-w-2xl mx-auto bg-[#111] border border-[#2a2a2a] rounded-3xl p-8 space-y-6">
+          <div className="max-w-4xl mx-auto bg-[#111] border border-[#2a2a2a] rounded-3xl p-8 space-y-6">
             <h2 className="text-3xl font-bold">Post New Reptile</h2>
 
             <input
@@ -311,7 +311,27 @@ JSON format:
             <div className="space-y-6">
               <input placeholder="Species *" value={postForm.species} onChange={(e) => setPostForm({ ...postForm, species: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
               <input placeholder="Name" value={postForm.name} onChange={(e) => setPostForm({ ...postForm, name: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
+              <input placeholder="Age" value={postForm.age} onChange={(e) => setPostForm({ ...postForm, age: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
               <input placeholder="Price *" type="number" value={postForm.price} onChange={(e) => setPostForm({ ...postForm, price: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
+              
+              <div className="flex flex-col gap-3">
+                <span className="text-sm text-gray-400">Gender</span>
+                <select value={postForm.gender} onChange={(e) => setPostForm({ ...postForm, gender: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4">
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <span className="text-sm text-gray-400">Health Status</span>
+                <select value={postForm.health} onChange={(e) => setPostForm({ ...postForm, health: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4">
+                  <option value="Vaccinated">Vaccinated</option>
+                  <option value="Healthy">Healthy</option>
+                  <option value="Needs Care">Needs Care</option>
+                </select>
+              </div>
+              
               <div className="flex flex-col gap-3">
                 <span className="text-sm text-gray-400">Availability</span>
                 <button
@@ -325,6 +345,12 @@ JSON format:
                   {postForm.availability === "Available" ? "Available" : "Off"}
                 </button>
               </div>
+              
+              <div className="flex items-center gap-3">
+                <input type="checkbox" checked={postForm.featured} onChange={(e) => setPostForm({ ...postForm, featured: e.target.checked })} className="w-5 h-5" />
+                <span className="text-sm">Featured Listing</span>
+              </div>
+              
               <textarea placeholder="Description" value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-3xl px-6 py-4 h-32" />
               <input placeholder="WhatsApp Contact *" value={postForm.contact} onChange={(e) => setPostForm({ ...postForm, contact: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
 
