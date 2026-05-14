@@ -269,7 +269,7 @@ async function getUnsplashImage(query: string): Promise<string> {
     const response = await fetch(
       `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
         query
-      )}&count=1&client_id=f7mWN0WfLAeI96sKEpA3-UqVLuqKf_r9d7gC0tEbC2w`,
+      )}&count=1&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}`,
       { signal: AbortSignal.timeout(5000) }
     );
     
@@ -340,30 +340,20 @@ export async function GET(request: NextRequest) {
     console.log("Starting to seed 20 reptile listings...");
 
     const insertData = await Promise.all(
-  REPTILE_DATA.map(async (reptile) => {
-    const { unsplashQuery, ...reptileData } = reptile; // strip unsplashQuery
-    try {
-      const imageUrl = await getUnsplashImage(unsplashQuery);
-      return {
-        ...reptileData,
-        image_url: imageUrl,
-        images: [imageUrl],
-        status: "approved",
-        payment_status: "paid",
-        featured: Math.random() > 0.7,
-      };
-    } catch (err) {
-      return {
-        ...reptileData,
-        image_url: getPlaceholderImage(unsplashQuery),
-        images: [getPlaceholderImage(unsplashQuery)],
-        status: "approved",
-        payment_status: "paid",
-        featured: Math.random() > 0.7,
-      };
-    }
-  })
-);
+      REPTILE_DATA.map(async (reptile) => {
+        const { unsplashQuery, ...reptileData } = reptile;
+        const imageUrl = await getUnsplashImage(unsplashQuery);
+
+        return {
+          ...reptileData,
+          image_url: imageUrl,
+          images: [imageUrl],
+          status: "approved",
+          payment_status: "paid",
+          featured: Math.random() > 0.7,
+        };
+      })
+    );
 
     console.log(`Prepared ${insertData.length} listings for insertion`);
 
