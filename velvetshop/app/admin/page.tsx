@@ -166,7 +166,6 @@ const handleGenerateWithAI = async () => {
       name: petNames[Math.floor(Math.random() * petNames.length)],
       age: "1-3 years",
       description: `Beautiful ${bestSpecies} with vibrant colors and calm temperament. Very healthy and active eater. Great for intermediate keepers. Requires proper heating, UVB lighting, and a suitable enclosure.`,
-      whatsapp_contact: "+1(505)6715584",
     }));
 
     setSuccessMsg(`✅ AI identified: ${bestSpecies}`);
