@@ -340,31 +340,30 @@ export async function GET(request: NextRequest) {
     console.log("Starting to seed 20 reptile listings...");
 
     const insertData = await Promise.all(
-      REPTILE_DATA.map(async (reptile) => {
-        try {
-          const imageUrl = await getUnsplashImage(reptile.unsplashQuery);
-          return {
-            ...reptile,
-            image_url: imageUrl,
-            images: [imageUrl],
-            status: "approved",
-            payment_status: "paid",
-            featured: Math.random() > 0.7,
-          };
-        } catch (err) {
-          console.error(`Error processing ${reptile.species}:`, err);
-          // Fallback with placeholder
-          return {
-            ...reptile,
-            image_url: getPlaceholderImage(reptile.unsplashQuery),
-            images: [getPlaceholderImage(reptile.unsplashQuery)],
-            status: "approved",
-            payment_status: "paid",
-            featured: Math.random() > 0.7,
-          };
-        }
-      })
-    );
+  REPTILE_DATA.map(async (reptile) => {
+    const { unsplashQuery, ...reptileData } = reptile; // strip unsplashQuery
+    try {
+      const imageUrl = await getUnsplashImage(unsplashQuery);
+      return {
+        ...reptileData,
+        image_url: imageUrl,
+        images: [imageUrl],
+        status: "approved",
+        payment_status: "paid",
+        featured: Math.random() > 0.7,
+      };
+    } catch (err) {
+      return {
+        ...reptileData,
+        image_url: getPlaceholderImage(unsplashQuery),
+        images: [getPlaceholderImage(unsplashQuery)],
+        status: "approved",
+        payment_status: "paid",
+        featured: Math.random() > 0.7,
+      };
+    }
+  })
+);
 
     console.log(`Prepared ${insertData.length} listings for insertion`);
 
