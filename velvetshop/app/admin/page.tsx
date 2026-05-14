@@ -41,7 +41,9 @@ export default function AdminPage() {
   const [postImages, setPostImages] = useState<string[]>([]);
   const [postImageUrl, setPostImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [generatingAI, setGeneratingAI] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiSuccess, setAiSuccess] = useState<string | null>(null);
   const [postLoading, setPostLoading] = useState(false);
 
   useEffect(() => {
@@ -103,56 +105,111 @@ export default function AdminPage() {
     setUploadingImage(false);
   };
 
-  // Reliable AI Fallback
-const handleGenerateWithAI = async () => {
-  if (!postImageUrl) {
-    alert("Please upload an image first");
-    return;
-  }
+  const generateWithAI = async () => {
+    if (!postImageUrl) {
+      alert("Please upload an image first");
+      return;
+    }
 
-  setGeneratingAI(true);
+    setAiLoading(true);
+    setAiError(null);
 
-  setTimeout(() => {
-    // Large list of common pet reptiles
-    const reptileSpecies = [
-      "Ball Python", "Leopard Gecko", "Bearded Dragon", "Corn Snake", 
-      "Crested Gecko", "Burmese Python", "King Snake", "Veiled Chameleon",
-      "Panther Chameleon", "Red-Eared Slider", "Russian Tortoise", 
-      "Sulcata Tortoise", "Green Iguana", "Blue-Tongued Skink"
-    ];
+    try {
+      const imageResponse = await fetch(postImageUrl);
+      const imageBlob = await imageResponse.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(imageBlob);
+      });
 
-    const petNames = ["Luna", "Spike", "Shadow", "Atlas", "Nova", "Echo", "Blaze", "Zephyr", "Onyx", "Phoenix", "Ghost", "Ember", "Midnight", "Aurora"];
+      const mimeType = imageBlob.type || "image/jpeg";
 
-    const randomSpecies = reptileSpecies[Math.floor(Math.random() * reptileSpecies.length)];
-    const randomName = petNames[Math.floor(Math.random() * petNames.length)];
+      const prompt = `You are an expert reptile specialist and pet appraiser.
 
-    // Realistic pricing based on species + country
-    let basePrice = 180;
-    if (randomSpecies.includes("Python")) basePrice = 220;
-    if (randomSpecies.includes("Dragon")) basePrice = 150;
-    if (randomSpecies.includes("Gecko")) basePrice = 90;
-    if (randomSpecies.includes("Chameleon")) basePrice = 280;
-    if (randomSpecies.includes("Tortoise")) basePrice = 320;
+Analyze this reptile image carefully and respond ONLY with a valid JSON object — no markdown, no backticks, no explanation.
 
-    // Adjust price based on country
-    let finalPrice = basePrice;
-    if (postForm.country === "UK") finalPrice = Math.round(basePrice * 0.85);   // Cheaper in UK
-    if (postForm.country === "Canada") finalPrice = Math.round(basePrice * 1.1); // Slightly higher
+Use this country for pricing: ${postForm.country}
 
-    setPostForm((prev) => ({
-      ...prev,
-      species: randomSpecies,
-      name: randomName,
-      age: Math.random() > 0.5 ? "1-2 years" : "2-4 years",
-      price: finalPrice.toString(),
-      description: `Stunning ${randomSpecies} with vibrant coloration and excellent temperament. Very healthy, active feeder, and easy to handle. Perfect for both beginners and experienced keepers. Comes with full care sheet and feeding schedule.`,
-    }));
+Pricing guide:
+- UK: price in GBP (£)
+- USA: price in USD ($)  
+- Canada: price in CAD (CA$)
 
-    setSuccessMsg(`✅ AI Detected: ${randomSpecies}\nPrice Suggested: ${postForm.country === "UK" ? "£" : postForm.country === "Canada" ? "CA$" : "$"}${finalPrice}`);
-    setTimeout(() => setSuccessMsg(null), 5000);
-    setGeneratingAI(false);
-  }, 1400);
-};
+JSON format:
+{
+  "species": "full scientific and common species name e.g. Ball Python (Python regius)",
+  "name": "a creative memorable pet name that suits this reptile appearance e.g. Obsidian, Eclipse, Pharaoh",
+  "age": "approximate age based on size and appearance e.g. 8-12 months, 2-3 years",
+  "price": 250,
+  "gender": "Male or Female or Unknown",
+  "health": "Healthy or Vaccinated or Needs Care",
+  "availability": "Available",
+  "description": "Write 3 convincing sentences about this specific reptile. Include: (1) personality and temperament based on species, (2) care requirements and feeding habits, (3) why this would make an amazing pet. Make it sound natural and appealing to a buyer."
+}`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    inline_data: {
+                      mime_type: mimeType,
+                      data: base64,
+                    }
+                  },
+                  { text: prompt }
+                ]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 1000,
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Gemini API error: " + response.status);
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+
+      setPostForm(prev => ({
+        ...prev,
+        species: parsed.species || prev.species,
+        name: parsed.name || prev.name,
+        age: parsed.age || prev.age,
+        price: String(parsed.price) || prev.price,
+        description: parsed.description || prev.description,
+        gender: parsed.gender || prev.gender,
+        health: parsed.health || prev.health,
+        availability: parsed.availability || prev.availability,
+      }));
+
+      setAiSuccess("✅ AI generated all details! Review and edit if needed.");
+      setTimeout(() => setAiSuccess(null), 4000);
+    } catch (err) {
+      console.error(err);
+      setAiError("AI analysis failed: " + (err instanceof Error ? err.message : "Unknown error"));
+    }
+
+    setAiLoading(false);
+  };
+
   const handlePostReptile = async () => {
     if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
       alert("Please fill all required fields");
@@ -264,13 +321,26 @@ const handleGenerateWithAI = async () => {
               </div>
             )}
 
-           <button
-  onClick={handleGenerateWithAI}
-  disabled={!postImageUrl || generatingAI}
-  className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 py-4 rounded-2xl font-medium transition flex items-center justify-center gap-2"
->
-  {generatingAI ? "🤖 Analyzing Image..." : "🤖 AI Detect Species & Generate Info"}
-</button>
+            {postImageUrl && (
+              <div className="mt-4 space-y-3">
+                <button
+                  onClick={generateWithAI}
+                  disabled={aiLoading}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-50 flex items-center justify-center gap-3"
+                >
+                  {aiLoading ? (
+                    <>
+                      <span className="animate-spin">⚙️</span>
+                      Analyzing image...
+                    </>
+                  ) : (
+                    <>🤖 Generate Details with AI</>
+                  )}
+                </button>
+                {aiError && <p className="text-red-400 text-sm text-center">{aiError}</p>}
+                {aiSuccess && <p className="text-green-400 text-sm text-center">{aiSuccess}</p>}
+              </div>
+            )}
 
             <div className="space-y-6">
               <input placeholder="Species *" value={postForm.species} onChange={(e) => setPostForm({ ...postForm, species: e.target.value })} className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4" />
