@@ -104,7 +104,7 @@ export default function AdminPage() {
   };
 
   // Reliable AI Fallback
- const handleGenerateWithAI = async () => {
+const handleGenerateWithAI = async () => {
   if (!postImageUrl) {
     alert("Please upload an image first");
     return;
@@ -112,40 +112,71 @@ export default function AdminPage() {
 
   setGeneratingAI(true);
 
-  // Large list of common pet reptiles
-  const reptileSpecies = [
-    "Ball Python", "Leopard Gecko", "Bearded Dragon", "Corn Snake", 
-    "Crested Gecko", "Burmese Python", "King Snake", "Veiled Chameleon",
-    "Panther Chameleon", "Red-Eared Slider", "Russian Tortoise", 
-    "Sulcata Tortoise", "Green Iguana", "Blue-Tongued Skink", 
-    "African Fat-Tailed Gecko", "Tokay Gecko", "Milk Snake", 
-    "Rosy Boa", "Kenyan Sand Boa", "Uromastyx", "Frilled Dragon"
-  ];
+  try {
+    // Use CLIP for zero-shot reptile classification
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/openai/clip-vit-large-patch14",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify({
+          inputs: {
+            image: postImageUrl,
+            text: [
+              "a photo of a ball python",
+              "a photo of a leopard gecko",
+              "a photo of a bearded dragon",
+              "a photo of a corn snake",
+              "a photo of a crested gecko",
+              "a photo of a chameleon",
+              "a photo of a turtle",
+              "a photo of an iguana",
+              "a photo of a king snake",
+              "a photo of a tortoise",
+              "a photo of a reptile",
+            ]
+          }
+        }),
+      }
+    );
 
-  // Large variety of unique pet names
-  const petNames = [
-    "Luna", "Spike", "Shadow", "Atlas", "Nova", "Echo", "Blaze", 
-    "Zephyr", "Onyx", "Phoenix", "Ghost", "Ember", "Midnight", 
-    "Aurora", "Thunder", "Storm", "Nyx", "Rogue", "Bandit", 
-    "Cobalt", "Jade", "Sable", "Raven", "Indigo", "Marble"
-  ];
+    const result = await response.json();
 
-  setTimeout(() => {
-    const randomSpecies = reptileSpecies[Math.floor(Math.random() * reptileSpecies.length)];
-    const randomName = petNames[Math.floor(Math.random() * petNames.length)];
+    // Extract best match
+    let bestSpecies = "Reptile";
+    let bestScore = 0;
+
+    if (Array.isArray(result)) {
+      result.forEach((item: any) => {
+        if (item.score > bestScore) {
+          bestScore = item.score;
+          bestSpecies = item.label.replace("a photo of a ", "").replace("a photo of ", "");
+        }
+      });
+    }
+
+    const petNames = ["Luna", "Spike", "Shadow", "Atlas", "Nova", "Echo", "Blaze", "Zephyr", "Onyx", "Phoenix", "Ghost", "Ember"];
 
     setPostForm((prev) => ({
       ...prev,
-      species: randomSpecies,
-      name: randomName,
-      age: Math.random() > 0.5 ? "1-2 years" : "2-4 years",
-      description: `Stunning ${randomSpecies} with vibrant colors and calm temperament. Very healthy, excellent feeder, and easy to handle. Perfect for both beginners and experienced keepers. Requires proper heating, UVB lighting, and a suitable enclosure. Comes with full care sheet.`,
+      species: bestSpecies,
+      name: petNames[Math.floor(Math.random() * petNames.length)],
+      age: "1-3 years",
+      description: `Beautiful ${bestSpecies} with vibrant colors and calm temperament. Very healthy and active eater. Great for intermediate keepers. Requires proper heating, UVB lighting, and a suitable enclosure.`,
     }));
 
-    setSuccessMsg(`✅ AI Detected: ${randomSpecies}\nPet Name: ${randomName}`);
-    setTimeout(() => setSuccessMsg(null), 5000);
-    setGeneratingAI(false);
-  }, 1400);
+    setSuccessMsg(`✅ AI identified: ${bestSpecies}`);
+    setTimeout(() => setSuccessMsg(null), 4000);
+
+  } catch (error) {
+    console.error(error);
+    alert("AI analysis failed. Please fill details manually.");
+  }
+
+  setGeneratingAI(false);
 };
   const handlePostReptile = async () => {
     if (!postForm.species || !postForm.location || !postForm.contact || !postForm.price) {
