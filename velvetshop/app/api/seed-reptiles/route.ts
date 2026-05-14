@@ -266,21 +266,62 @@ const REPTILE_DATA = [
 
 async function getUnsplashImage(query: string): Promise<string> {
   try {
-    // Using a default professional reptile image from Unsplash collections
     const response = await fetch(
       `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
         query
-      )}&count=1&client_id=f7mWN0WfLAeI96sKEpA3-UqVLuqKf_r9d7gC0tEbC2w`
+      )}&count=1&client_id=f7mWN0WfLAeI96sKEpA3-UqVLuqKf_r9d7gC0tEbC2w`,
+      { signal: AbortSignal.timeout(5000) }
     );
+    
+    if (!response.ok) {
+      console.warn(`Unsplash API error: ${response.status}`);
+      return getPlaceholderImage(query);
+    }
+    
     const data = await response.json();
     if (data.results && data.results.length > 0) {
       return data.results[0].urls.regular;
     }
   } catch (error) {
-    console.error("Error fetching image:", error);
+    console.warn("Error fetching from Unsplash:", error);
   }
 
-  // Fallback to a generic placeholder
+  return getPlaceholderImage(query);
+}
+
+function getPlaceholderImage(query: string): string {
+  // Map species to professional reptile images
+  const imageMap: { [key: string]: string } = {
+    "bearded dragon": "https://images.unsplash.com/photo-1599599810694-b5ac4dd64b51?w=800",
+    "leopard gecko": "https://images.unsplash.com/photo-1516979187457-635ecca3ebff?w=800",
+    "crested gecko": "https://images.unsplash.com/photo-1622770073262-cdb4b11b2d73?w=800",
+    "ball python": "https://images.unsplash.com/photo-1604088113235-079ddf4ec872?w=800",
+    "corn snake": "https://images.unsplash.com/photo-1608848461950-0fed8979d628?w=800",
+    "blue-tongued skink": "https://images.unsplash.com/photo-1608848461950-0fed8979d628?w=800",
+    "veiled chameleon": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+    "green iguana": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+    "russian tortoise": "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=800",
+    "king snake": "https://images.unsplash.com/photo-1608848461950-0fed8979d628?w=800",
+    "milk snake": "https://images.unsplash.com/photo-1608848461950-0fed8979d628?w=800",
+    "ackie monitor": "https://images.unsplash.com/photo-1516979187457-635ecca3ebff?w=800",
+    "savannah monitor": "https://images.unsplash.com/photo-1516979187457-635ecca3ebff?w=800",
+    "african fat-tailed gecko": "https://images.unsplash.com/photo-1516979187457-635ecca3ebff?w=800",
+    "panther chameleon": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+    "boa constrictor": "https://images.unsplash.com/photo-1604088113235-079ddf4ec872?w=800",
+    "sulcata tortoise": "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=800",
+    "hognose snake": "https://images.unsplash.com/photo-1608848461950-0fed8979d628?w=800",
+    "green tree python": "https://images.unsplash.com/photo-1604088113235-079ddf4ec872?w=800",
+    "gargoyle gecko": "https://images.unsplash.com/photo-1516979187457-635ecca3ebff?w=800",
+  };
+
+  const lowerQuery = query.toLowerCase();
+  for (const [key, url] of Object.entries(imageMap)) {
+    if (lowerQuery.includes(key)) {
+      return url;
+    }
+  }
+
+  // Generic reptile fallback
   return "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800";
 }
 
@@ -300,30 +341,49 @@ export async function GET(request: NextRequest) {
 
     const insertData = await Promise.all(
       REPTILE_DATA.map(async (reptile) => {
-        const imageUrl = await getUnsplashImage(reptile.unsplashQuery);
-        return {
-          ...reptile,
-          image_url: imageUrl,
-          images: [imageUrl],
-          status: "approved",
-          payment_status: "paid",
-          featured: Math.random() > 0.7,
-        };
+        try {
+          const imageUrl = await getUnsplashImage(reptile.unsplashQuery);
+          return {
+            ...reptile,
+            image_url: imageUrl,
+            images: [imageUrl],
+            status: "approved",
+            payment_status: "paid",
+            featured: Math.random() > 0.7,
+          };
+        } catch (err) {
+          console.error(`Error processing ${reptile.species}:`, err);
+          // Fallback with placeholder
+          return {
+            ...reptile,
+            image_url: getPlaceholderImage(reptile.unsplashQuery),
+            images: [getPlaceholderImage(reptile.unsplashQuery)],
+            status: "approved",
+            payment_status: "paid",
+            featured: Math.random() > 0.7,
+          };
+        }
       })
     );
 
-    const { error } = await supabase.from("listings").insert(insertData);
+    console.log(`Prepared ${insertData.length} listings for insertion`);
+
+    const { data, error } = await supabase.from("listings").insert(insertData).select();
 
     if (error) {
+      console.error("Supabase insert error:", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: error.message, details: error },
         { status: 400 }
       );
     }
 
+    console.log(`✅ Successfully inserted ${data?.length || insertData.length} listings`);
+
     return NextResponse.json({
       message: "✅ Successfully seeded 20 reptile listings!",
       count: insertData.length,
+      inserted: data?.length || insertData.length,
     });
   } catch (error) {
     console.error("Seeding error:", error);
