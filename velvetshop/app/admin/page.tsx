@@ -28,6 +28,7 @@ export default function AdminPage() {
     species: "",
     name: "",
     age: "",
+    location: "",
     price: "",
     description: "",
     contact: "",
@@ -219,7 +220,7 @@ JSON format:
     } else {
       setSuccessMsg("✅ Reptile posted successfully and is now live!");
       setPostForm({
-        species: "", name: "", age: "", price: "",
+        species: "", name: "", age: "", location: "", price: "",
         description: "", contact: "", featured: false, gender: "Male",
         health: "Vaccinated", availability: "Available"
       });

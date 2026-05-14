@@ -8,8 +8,6 @@ interface Listing {
   id: string;
   species: string;
   name?: string;
-  location: string;
-  country?: string;
   price: number;
   image_url?: string;
   gender?: string;
@@ -330,14 +328,7 @@ export default function BrowsePage() {
 
                           <div className="text-right">
                             <div className="text-black font-bold text-lg">
-                              {getCurrency(
-                                listing.country
-                              )}
-                              {listing.price}
-                            </div>
-
-                            <div className="text-gray-500 text-xs">
-                              {listing.location}
+                              ${listing.price}
                             </div>
                           </div>
                         </div>
@@ -435,15 +426,8 @@ export default function BrowsePage() {
                       "Unnamed"}
                   </h3>
 
-                  <p className="text-gray-600 mb-2">
-                    {selectedListing.location}
-                  </p>
-
                   <p className="text-3xl font-bold text-black mb-4">
-                    {getCurrency(
-                      selectedListing.country
-                    )}
-                    {selectedListing.price}
+                    ${selectedListing.price}
                   </p>
 
                   <p className="text-gray-700 mb-6">
@@ -512,10 +496,7 @@ export default function BrowsePage() {
                     <h4>{item.species}</h4>
 
                     <p className="text-[#c8ff00]">
-                      {getCurrency(
-                        item.country
-                      )}
-                      {item.price}
+                      ${item.price}
                     </p>
                   </div>
 
