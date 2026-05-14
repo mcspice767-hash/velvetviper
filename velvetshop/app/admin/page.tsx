@@ -152,35 +152,65 @@ JSON format:
   "description": "Write 3 convincing sentences about this specific reptile. Include: (1) personality and temperament based on species, (2) care requirements and feeding habits, (3) why this would make an amazing pet. Make it sound natural and appealing to a buyer."
 }`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
+      const requestBody = {
+        contents: [
+          {
+            parts: [
               {
-                parts: [
-                  {
-                    inline_data: {
-                      mime_type: mimeType,
-                      data: base64,
-                    }
-                  },
-                  { text: prompt }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 1000,
-            }
-          })
+                inline_data: {
+                  mime_type: mimeType,
+                  data: base64,
+                }
+              },
+              { text: prompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
         }
-      );
+      };
 
-      if (!response.ok) {
-        throw new Error("Gemini API error: " + response.status);
+      // Retry logic with exponential backoff
+      let response;
+      let lastError;
+      const maxRetries = 3;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(requestBody)
+            }
+          );
+
+          if (response.status === 429) {
+            // Rate limited - wait and retry
+            const waitTime = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+            console.log(`Rate limited. Waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}...`);
+            setAiError(`Rate limited. Retrying in ${waitTime / 1000}s... (${attempt + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
+
+          if (!response.ok) {
+            throw new Error("Gemini API error: " + response.status);
+          }
+
+          // Success - break out of retry loop
+          break;
+        } catch (err) {
+          lastError = err;
+          if (attempt === maxRetries - 1) throw err;
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw new Error("Failed to get valid response from Gemini API");
       }
 
       const data = await response.json();
