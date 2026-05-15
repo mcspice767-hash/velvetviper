@@ -147,8 +147,11 @@ export default function AdminPage() {
           { method: "POST", body: formData }
         );
         const data = await res.json();
+        console.log("Cloudinary response:", data);
         if (data.secure_url) uploaded.push(data.secure_url);
-      } catch {}
+      } catch (err) {
+        console.error("Cloudinary upload failed:", err);
+      }
     }
     if (uploaded.length > 0) {
       setEditImages((prev) => [...prev, ...uploaded]);
@@ -193,8 +196,11 @@ export default function AdminPage() {
           { method: "POST", body: formData }
         );
         const data = await res.json();
+        console.log("Cloudinary response:", data);
         if (data.secure_url) uploadedUrls.push(data.secure_url);
-      } catch {}
+      } catch (err) {
+        console.error("Cloudinary upload failed:", err);
+      }
     }
     setPostImages(uploadedUrls);
     if (uploadedUrls.length > 0) setPostImageUrl(uploadedUrls[0]);
