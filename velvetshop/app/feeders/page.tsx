@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface Feeder {
@@ -50,6 +51,7 @@ export default function FeedersPage() {
   const [selectedFeeder, setSelectedFeeder] = useState<Feeder | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
 
   const categories = ["All", ...Array.from(new Set(feeders.map(f => f.category)))];
 
@@ -224,7 +226,7 @@ export default function FeedersPage() {
                   Add to Cart
                 </button>
               </div>
-                </div>
+            ))}
 
               {filteredFeeders.length === 0 && (
                 <div className="text-center py-20 col-span-1 md:col-span-2">
@@ -340,7 +342,19 @@ export default function FeedersPage() {
                   <span className="text-[#c8ff00]">${totalPrice.toFixed(2)}</span>
                 </div>
 
-                <button className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-lg hover:bg-white transition">
+                <button
+                  onClick={() => {
+                    localStorage.setItem("velvetviper_cart", JSON.stringify(
+                      cart.map(item => ({
+                        ...item,
+                        quantity: item.cartQuantity,
+                      }))
+                    ));
+                    setShowCart(false);
+                    router.push("/checkout");
+                  }}
+                  className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-lg hover:bg-white transition"
+                >
                   Proceed to Checkout
                 </button>
               </div>
