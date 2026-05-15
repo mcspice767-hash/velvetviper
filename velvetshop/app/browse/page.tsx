@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 
@@ -33,6 +34,7 @@ export default function BrowsePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchListings();
@@ -527,7 +529,14 @@ export default function BrowsePage() {
                   </span>
                 </div>
 
-                <button className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-lg">
+                <button
+                  onClick={() => {
+                    localStorage.setItem("velvetviper_cart", JSON.stringify(cart));
+                    setShowCart(false);
+                    router.push("/checkout");
+                  }}
+                  className="w-full bg-[#c8ff00] text-black py-5 rounded-2xl font-bold text-lg"
+                >
                   Proceed to Checkout
                 </button>
               </div>
