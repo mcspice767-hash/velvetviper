@@ -179,7 +179,14 @@ export default function BrowsePage() {
               href="/browse"
               className="text-[#c8ff00]"
             >
-              Browse
+              Reptiles
+            </Link>
+
+            <Link
+              href="/feeders"
+              className="hover:text-[#c8ff00]"
+            >
+              Feeders
             </Link>
           </div>
 

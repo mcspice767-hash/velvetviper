@@ -102,8 +102,10 @@ export default function Home() {
 
           <div className="hidden md:flex gap-8 text-sm">
             <Link href="/" className="hover:text-[#c8ff00]">Home</Link>
-            <Link href="/browse" className="hover:text-[#c8ff00]">Browse</Link>
-            <Link href="/my-listings" className="hover:text-[#c8ff00]">My Listings</Link>
+            <Link href="/browse" className="hover:text-[#c8ff00]">Reptiles</Link>
+            <Link href="/feeders" className="hover:text-[#c8ff00]">Feeders</Link>
+            <Link href="/about" className="hover:text-[#c8ff00]">About</Link>
+            <Link href="/account" className="hover:text-[#c8ff00]">Account</Link>
             <Link href="/login" className="hover:text-[#c8ff00]">Login</Link>
           </div>
 
@@ -142,7 +144,11 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/95 z-[200] flex flex-col items-center justify-center gap-8 p-8 text-center">
           <button className="absolute top-6 right-6 text-3xl" onClick={() => setMenuOpen(false)}>✕</button>
           <Link href="/" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Home</Link>
-          <Link href="/browse" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Browse</Link>
+          <Link href="/browse" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Reptiles</Link>
+          <Link href="/feeders" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Feeders</Link>
+          <Link href="/about" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>About</Link>
+          <Link href="/account" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Account</Link>
+          <Link href="/contact" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Contact</Link>
           <Link href="/login" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Login</Link>
         </div>
       )}
@@ -164,18 +170,17 @@ export default function Home() {
         <h3 className="text-4xl md:text-5xl font-bold mb-10">Shop by Category</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { emoji: "🐍", title: "Live Reptiles", desc: "Snakes, geckos, lizards & more" },
-            { emoji: "🦗", title: "Food & Nutrition", desc: "Crickets, mice & feeders" },
-            { emoji: "🏠", title: "Housing & Enclosures", desc: "Tanks, vivariums & hides" },
-            { emoji: "💡", title: "Heating & Lighting", desc: "UVB, heat mats & lamps" },
-            { emoji: "💊", title: "Health & Grooming", desc: "Supplements & care" },
-            { emoji: "🎮", title: "Accessories", desc: "Décor, substrate & tools" },
+            { emoji: "🐍", title: "Live Reptiles", desc: "Snakes, geckos, lizards & more", href: "/browse" },
+            { emoji: "🏠", title: "Housing & Enclosures", desc: "Tanks, vivariums & hides", href: "/housing" },
+            { emoji: "💡", title: "Heating & Lighting", desc: "UVB, heat mats & lamps", href: "/heating" },
+            { emoji: "💊", title: "Health & Grooming", desc: "Supplements & care", href: "/health" },
+            { emoji: "🎮", title: "Accessories", desc: "Décor, substrate & tools", href: "/accessories" },
           ].map((cat, i) => (
-            <div key={i} className="bg-[#111] border border-[#2a2a2a] hover:border-[#c8ff00] rounded-3xl p-8 cursor-pointer transition group" onClick={() => alert("Coming soon...")}>
+            <Link key={i} href={cat.href} className="bg-[#111] border border-[#2a2a2a] hover:border-[#c8ff00] rounded-3xl p-8 cursor-pointer transition group">
               <div className="text-6xl mb-6 group-hover:scale-110 transition">{cat.emoji}</div>
               <h4 className="text-2xl font-bold mb-2">{cat.title}</h4>
               <p className="text-gray-500">{cat.desc}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
