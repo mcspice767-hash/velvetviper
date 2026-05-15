@@ -137,7 +137,7 @@ export default function FeedersPage() {
         </div>
       </nav>
 
-      <div className="pt-24 px-6">
+      <div className="pt-24 px-4 md:px-6">
         {/* Header Section */}
         <div className="max-w-7xl mx-auto mb-12">
           <div className="mb-8">
@@ -145,41 +145,49 @@ export default function FeedersPage() {
             <p className="text-gray-400 text-lg">High-quality nutritious feeders for your reptile companions</p>
           </div>
 
-          {/* Search & Filter */}
-          <div className="space-y-4 mb-8">
-            <input
-              type="text"
-              placeholder="Search feeders..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 text-[#e8e0d0] focus:outline-none focus:border-[#c8ff00]"
-            />
-
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setCategoryFilter(category)}
-                  className={`px-6 py-2 rounded-full whitespace-nowrap transition ${
-                    categoryFilter === category
-                      ? "bg-[#c8ff00] text-black"
-                      : "bg-[#111] border border-[#2a2a2a] hover:border-[#c8ff00]"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <p className="text-gray-400">
-            Showing {filteredFeeders.length} of {feeders.length} feeders
-          </p>
+          {/* Search Bar */}
+          <input
+            type="text"
+            placeholder="Search feeders..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-black border border-[#2a2a2a] rounded-2xl px-6 py-4 text-[#e8e0d0] focus:outline-none focus:border-[#c8ff00] mb-8"
+          />
         </div>
 
-        {/* Product Grid */}
+        {/* Main Content with Sidebar */}
         <div className="max-w-7xl mx-auto pb-24">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Sidebar Filter */}
+            <div className="lg:col-span-1">
+              <div className="bg-[#111] border border-[#2a2a2a] rounded-3xl p-6 sticky top-32">
+                <h3 className="text-2xl font-bold mb-6 text-[#c8ff00]">Filter</h3>
+                <div className="space-y-3">
+                  {categories.map(category => (
+                    <button
+                      key={category}
+                      onClick={() => setCategoryFilter(category)}
+                      className={`w-full text-left px-4 py-3 rounded-2xl transition font-medium ${
+                        categoryFilter === category
+                          ? "bg-[#c8ff00] text-black"
+                          : "bg-[#2a2a2a] text-[#e8e0d0] hover:bg-[#3a3a3a]"
+                      }`}
+                    >
+                      {category === "All" ? "All Feeders" : category}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-8 pt-8 border-t border-[#2a2a2a]">
+                  <p className="text-sm text-gray-400">
+                    Showing <span className="text-[#c8ff00] font-bold">{filteredFeeders.length}</span> of {feeders.length} feeders
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Product Grid */}
+            <div className="lg:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {filteredFeeders.map(feeder => (
               <div
                 key={feeder.id}
@@ -216,14 +224,16 @@ export default function FeedersPage() {
                   Add to Cart
                 </button>
               </div>
-            ))}
-          </div>
+                </div>
 
-          {filteredFeeders.length === 0 && (
-            <div className="text-center py-20">
-              <p className="text-gray-400 text-xl">No feeders found matching your search.</p>
+              {filteredFeeders.length === 0 && (
+                <div className="text-center py-20 col-span-1 md:col-span-2">
+                  <p className="text-gray-400 text-xl">No feeders found matching your search.</p>
+                </div>
+              )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -340,37 +350,47 @@ export default function FeedersPage() {
       )}
 
       {/* Footer */}
-      <footer className="bg-black border-t border-[#2a2a2a] mt-20 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="font-bold text-[#c8ff00] mb-4">VelvetViper Feeders</h3>
-              <p className="text-gray-400 text-sm">Premium nutrition for your reptile family</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Categories</h4>
-              <ul className="text-gray-400 text-sm space-y-2">
-                <li><a href="#" className="hover:text-[#c8ff00]">Roaches</a></li>
-                <li><a href="#" className="hover:text-[#c8ff00]">Mice</a></li>
-                <li><a href="#" className="hover:text-[#c8ff00]">Worms</a></li>
-                <li><a href="#" className="hover:text-[#c8ff00]">Crickets</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Contact</h4>
-              <p className="text-gray-400 text-sm">Email: feeders@velvetviper.com</p>
-              <p className="text-gray-400 text-sm">Phone: 1-800-VIPER-01</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Delivery</h4>
-              <p className="text-gray-400 text-sm">Fast insulated shipping</p>
-              <p className="text-gray-400 text-sm">Live arrival guaranteed</p>
+      <footer className="bg-black border-t border-[#2a2a2a] mt-20">
+        <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <h4 className="font-bold text-lg mb-4 text-[#c8ff00]">Shop</h4>
+            <div className="space-y-2 text-sm text-gray-400">
+              <Link href="/browse" className="hover:text-[#c8ff00]">Live Reptiles</Link>
+              <Link href="/feeders" className="hover:text-[#c8ff00]">Feeders & Food</Link>
+              <Link href="/housing" className="hover:text-[#c8ff00]">Housing</Link>
+              <Link href="/heating" className="hover:text-[#c8ff00]">Heating & Lighting</Link>
             </div>
           </div>
-
-          <div className="border-t border-[#2a2a2a] pt-8 text-center text-gray-500 text-sm">
-            <p>&copy; 2026 VelvetViper. All rights reserved.</p>
+          <div>
+            <h4 className="font-bold text-lg mb-4 text-[#c8ff00]">Delivery & Shipping</h4>
+            <div className="space-y-2 text-sm text-gray-400">
+              <p>📦 Standard: 3-5 business days</p>
+              <p>⚡ Express: 2-3 business days</p>
+              <p>🟢 Live Arrival Guarantee</p>
+              <p>❄️ Insulated & Heated Shipping</p>
+            </div>
           </div>
+          <div>
+            <h4 className="font-bold text-lg mb-4 text-[#c8ff00]">Support</h4>
+            <div className="space-y-2 text-sm text-gray-400">
+              <Link href="/faq" className="hover:text-[#c8ff00]">FAQ</Link>
+              <Link href="/contact" className="hover:text-[#c8ff00]">Contact Us</Link>
+              <p>📧 support@velvetviper.com</p>
+              <p>📞 1-800-VIPER-01</p>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-bold text-lg mb-4 text-[#c8ff00]">About Us</h4>
+            <div className="space-y-2 text-sm text-gray-400">
+              <Link href="/about" className="hover:text-[#c8ff00]">Our Story</Link>
+              <p>🐍 Premium feeders sourced ethically</p>
+              <p>✅ All products health checked</p>
+              <p>🤝 100% Satisfaction Guaranteed</p>
+            </div>
+          </div>
+        </div>
+        <div className="text-center py-8 border-t border-[#2a2a2a] text-sm text-gray-500">
+          © 2026 VelvetViper. All rights reserved. | Trusted by reptile enthusiasts worldwide.
         </div>
       </footer>
     </div>
