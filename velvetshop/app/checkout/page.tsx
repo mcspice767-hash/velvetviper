@@ -123,15 +123,60 @@ export default function CheckoutPage() {
     setShowPaymentModal(true);
   };
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
     const method = PAYMENT_METHODS.find((m) => m.id === selectedPayment);
     if (!method) return;
-    const itemList = cart.map((i) => `• ${i.species} (${i.name || "Unnamed"}) × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`).join("\n");
-    const msg = `${method.whatsappMsg(total, form.fullName)}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
+
+    // 1. Save order to Supabase
+    const orderData = {
+      customer_name: form.fullName,
+      customer_email: (await supabase.auth.getUser()).data.user?.email || "",
+      customer_phone: form.phone,
+      shipping_address: form.address,
+      delivery_notes: form.notes,
+      payment_method: method.label,
+      items: cart,
+      total,
+      status: "pending",
+    };
+
+    const { data: savedOrder, error } = await supabase
+      .from("orders")
+      .insert(orderData)
+      .select()
+      .single();
+
+    if (error) {
+      alert("Failed to save order: " + error.message);
+      return;
+    }
+
+    // 2. Save to localStorage for confirmation page
+    localStorage.setItem("last_order", JSON.stringify(savedOrder));
+
+    // 3. Send confirmation email via Supabase Edge Function (optional - see note below)
+    try {
+      await fetch("/api/send-order-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: savedOrder }),
+      });
+    } catch (_) {}
+
+    // 4. Clear cart
+    localStorage.removeItem("velvetviper_cart");
+
+    // 5. Open WhatsApp
+    const itemList = cart
+      .map((i) => `• ${i.species} (${i.name || "Unnamed"}) × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
+      .join("\n");
+    const msg = `${method.whatsappMsg(total, form.fullName)}\n\n*Order ID:* #${savedOrder.id.slice(0, 8).toUpperCase()}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
+
+    // 6. Redirect to confirmation page
     setShowPaymentModal(false);
-    router.push("/order-tracking");
+    router.push("/order-confirmation");
   };
 
   const activeMethod = PAYMENT_METHODS.find((m) => m.id === selectedPayment);
