@@ -11,7 +11,7 @@ declare module "react" {
 }
 
 const ADMIN_PASSWORD = "velvet2026";
-const WHATSAPP_NUMBER = "15551234567"; // ← replace with your number
+const WHATSAPP_NUMBER = "+1505671554"; // ← replace with your number
 
 const STAGES_LABELS: Record<string, string> = {
   pending: "Order Placed",
