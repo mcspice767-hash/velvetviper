@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
+import Navbar from "../../components/Navbar";
 
 interface Listing {
   id: string;
@@ -155,68 +156,8 @@ export default function BrowsePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0] font-serif">
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full bg-black/95 border-b border-[#2a2a2a] z-50">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-          <Link
-            href="/"
-            className="flex items-center gap-3 hover:text-[#c8ff00]"
-          >
-            <span className="text-4xl">🐍</span>
-
-            <h1 className="text-3xl font-bold tracking-tight">
-              VELVETVIPER
-            </h1>
-          </Link>
-
-          <div className="hidden md:flex gap-8 text-sm">
-            <Link
-              href="/"
-              className="hover:text-[#c8ff00]"
-            >
-              Home
-            </Link>
-
-            <Link
-              href="/browse"
-              className="text-[#c8ff00]"
-            >
-              Reptiles
-            </Link>
-
-            <Link
-              href="/feeders"
-              className="hover:text-[#c8ff00]"
-            >
-              Feeders
-            </Link>
-          </div>
-
-          <button
-            onClick={() =>
-              setShowCart(!showCart)
-            }
-            className="text-2xl relative hover:text-[#c8ff00]"
-          >
-            🛒
-
-            {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#c8ff00] text-black text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {totalItems}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="md:hidden text-3xl"
-          >
-            ☰
-          </button>
-        </div>
-      </nav>
-
-      <div className="pt-24 px-6">
+      <Navbar cart={cart} onCartClick={() => setShowCart(true)} />
+      <div className="pt-[calc(var(--nav-height)+var(--page-pad))] px-[var(--page-pad)]">
         {/* Search & Filter */}
         <div className="max-w-7xl mx-auto mb-12">
           <h1 className="text-5xl font-bold mb-8">

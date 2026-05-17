@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({ email: "", password: "", confirmPassword: "" });
@@ -111,6 +112,7 @@ export default function SignupPage() {
         .bl:hover{color:#666;}
       `}</style>
 
+      <Navbar />
       <div className="sr">
         <div className="orb orb1" />
         <div className="orb orb2" />

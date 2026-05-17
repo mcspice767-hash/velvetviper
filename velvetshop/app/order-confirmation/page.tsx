@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 interface Order {
   id: string;
@@ -97,6 +98,7 @@ export default function OrderConfirmationPage() {
         .pm-badge { display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:4px 10px;font-size:0.78rem;color:#888; }
       `}</style>
 
+      <Navbar />
       <div className="cr">
         <div className="orb orb1" /><div className="orb orb2" />
         <div className="cinner">

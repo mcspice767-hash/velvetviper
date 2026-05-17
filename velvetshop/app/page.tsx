@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
+import Navbar from "../components/Navbar";
 
 interface Listing {
   id: string;
@@ -28,7 +29,6 @@ export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -92,44 +92,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0] font-serif">
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full bg-black/95 border-b border-[#2a2a2a] z-50">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <span className="text-4xl">🐍</span>
-            <h1 className="text-3xl font-bold tracking-tight">VELVETVIPER</h1>
-          </div>
-
-          <div className="hidden md:flex gap-8 text-sm">
-            <Link href="/" className="hover:text-[#c8ff00]">Home</Link>
-            <Link href="/browse" className="hover:text-[#c8ff00]">Reptiles</Link>
-            <Link href="/feeders" className="hover:text-[#c8ff00]">Feeders</Link>
-            <Link href="/about" className="hover:text-[#c8ff00]">About</Link>
-            <Link href="/account" className="hover:text-[#c8ff00]">Account</Link>
-            <Link href="/login" className="hover:text-[#c8ff00]">Login</Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              className="md:hidden text-2xl hover:text-[#c8ff00] transition"
-              onClick={() => setMenuOpen(true)}
-            >
-              ☰
-            </button>
-            <button
-              onClick={() => setShowCart(!showCart)}
-              className="relative text-2xl hover:text-[#c8ff00] transition"
-            >
-              🛒
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-[#c8ff00] text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar cart={cart} onCartClick={() => setShowCart(true)} />
 
       {/* Banners */}
       <div className="pt-20">
@@ -139,19 +102,6 @@ export default function Home() {
           </div>
         ))}
       </div>
-
-      {menuOpen && (
-        <div className="fixed inset-0 bg-black/95 z-[200] flex flex-col items-center justify-center gap-8 p-8 text-center">
-          <button className="absolute top-6 right-6 text-3xl" onClick={() => setMenuOpen(false)}>✕</button>
-          <Link href="/" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Home</Link>
-          <Link href="/browse" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Reptiles</Link>
-          <Link href="/feeders" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Feeders</Link>
-          <Link href="/about" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>About</Link>
-          <Link href="/account" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Account</Link>
-          <Link href="/contact" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Contact</Link>
-          <Link href="/login" className="text-4xl font-semibold hover:text-[#c8ff00]" onClick={() => setMenuOpen(false)}>Login</Link>
-        </div>
-      )}
 
       {/* Hero */}
       <div className="max-w-5xl mx-auto text-center pt-24 pb-16 px-4 md:px-6">

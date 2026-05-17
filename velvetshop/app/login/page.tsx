@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -136,6 +137,7 @@ export default function LoginPage() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
       `}</style>
 
+      <Navbar />
       <div className="lr">
         <div className="orb orb1" /><div className="orb orb2" />
 

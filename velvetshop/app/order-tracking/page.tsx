@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 const STAGES = [
   { key: "pending",              label: "Order Placed",           icon: "📋", desc: "Your order has been received" },
@@ -191,14 +192,7 @@ export default function OrderTrackingPage() {
 
       <div className="tr">
         <div className="orb orb1" /><div className="orb orb2" />
-
-        <nav className="tnav">
-          <Link href="/" className="tnav-logo">
-            <span style={{fontSize:"1.6rem"}}>🐍</span>
-            <span className="tnav-title">VelvetViper</span>
-          </Link>
-          {user && <span style={{fontSize:"0.78rem",color:"#555"}}>{user.email}</span>}
-        </nav>
+        <Navbar />
 
         <div className="tinner">
           <div className="thead">

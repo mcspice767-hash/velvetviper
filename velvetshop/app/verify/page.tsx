@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Navbar from "../../components/Navbar";
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -97,6 +98,7 @@ export default function VerifyPage() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
       `}</style>
 
+      <Navbar />
       <div className="vr">
         <div className="orb orb1" /><div className="orb orb2" />
         <div className="vbox">

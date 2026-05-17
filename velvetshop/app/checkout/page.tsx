@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import Navbar from "../../components/Navbar";
 
 interface CartItem {
   id: string;
@@ -470,16 +471,8 @@ export default function CheckoutPage() {
         .wa-icon { font-size:1.2rem; }
       `}</style>
 
+      <Navbar />
       <div className="co-root">
-        {/* Nav */}
-        <nav className="co-nav">
-          <Link href="/browse" className="co-nav-logo">
-            <span style={{fontSize:"1.8rem"}}>🐍</span>
-            <span className="co-nav-title">VelvetViper</span>
-          </Link>
-          <span className="co-nav-step">Secure Checkout</span>
-        </nav>
-
         {/* Progress */}
         <div className="co-progress">
           <div className="co-step">
