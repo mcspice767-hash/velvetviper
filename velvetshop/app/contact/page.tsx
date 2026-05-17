@@ -48,14 +48,14 @@ export default function ContactPage() {
           <div className="bg-[#111] border border-[#2a2a2a] rounded-3xl p-8 text-center hover:border-[#c8ff00] transition">
             <div className="text-5xl mb-4">📧</div>
             <h3 className="text-xl font-bold mb-2">Email</h3>
-            <p className="text-gray-400 mb-4">support@velvetviper.com</p>
+            <p className="text-gray-400 mb-4">reptilelizard48@gmail.com</p>
             <p className="text-sm text-gray-500">Response within 24 hours</p>
           </div>
 
           <div className="bg-[#111] border border-[#2a2a2a] rounded-3xl p-8 text-center hover:border-[#c8ff00] transition">
             <div className="text-5xl mb-4">📱</div>
             <h3 className="text-xl font-bold mb-2">Phone</h3>
-            <p className="text-gray-400 mb-4">1-800-VIPER-01</p>
+            <p className="text-gray-400 mb-4">+1 505-671-5584</p>
             <p className="text-sm text-gray-500">Mon-Fri, 9am-6pm EST</p>
           </div>
 
@@ -158,8 +158,8 @@ export default function ContactPage() {
             <div>
               <h4 className="font-bold mb-4">Support</h4>
               <ul className="text-gray-400 text-sm space-y-2">
-                <li><a href="mailto:support@velvetviper.com" className="hover:text-[#c8ff00]">Email Support</a></li>
-                <li><a href="tel:1-800-VIPER-01" className="hover:text-[#c8ff00]">Call Us</a></li>
+                <li><a href="mailto:reptilelizard48@gmail.com" className="hover:text-[#c8ff00]">Email Support</a></li>
+                <li><a href="tel:+15056715584" className="hover:text-[#c8ff00]">Call Us</a></li>
                 <li><Link href="/contact" className="hover:text-[#c8ff00]">Contact Form</Link></li>
               </ul>
             </div>
