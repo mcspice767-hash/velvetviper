@@ -6,7 +6,11 @@ export const metadata: Metadata = {
   title: "VelvetViper | Premium Reptile Marketplace",
   description: "VelvetViper is the luxury reptile marketplace for premium listings, feeders, and secure checkout.",
   themeColor: "#050505",
-  viewport: "width=device-width, initial-scale=1.0",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1.0,
 };
 
 export default function RootLayout({
