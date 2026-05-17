@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Navbar from "../../components/Navbar";
 
 interface ContactMessage {
   name: string;
@@ -34,25 +35,9 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0] font-serif">
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full bg-black/95 border-b border-[#2a2a2a] z-50">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 hover:text-[#c8ff00]">
-            <span className="text-4xl">🐍</span>
-            <h1 className="text-3xl font-bold tracking-tight">VELVETVIPER</h1>
-          </Link>
+      <Navbar />
 
-          <div className="hidden md:flex gap-8 text-sm">
-            <Link href="/" className="hover:text-[#c8ff00]">Home</Link>
-            <Link href="/browse" className="hover:text-[#c8ff00]">Reptiles</Link>
-            <Link href="/feeders" className="hover:text-[#c8ff00]">Feeders</Link>
-            <Link href="/faq" className="hover:text-[#c8ff00]">FAQ</Link>
-            <Link href="/contact" className="text-[#c8ff00]">Contact</Link>
-          </div>
-        </div>
-      </nav>
-
-      <div className="pt-24 px-6">
+      <div className="pt-[calc(var(--nav-height)+var(--page-pad))] px-[var(--page-pad)]">
         <div className="max-w-7xl mx-auto mb-12">
           <h1 className="text-5xl font-bold mb-2">Contact Us</h1>
           <p className="text-gray-400 text-lg">We'd love to hear from you. Get in touch with our team.</p>
