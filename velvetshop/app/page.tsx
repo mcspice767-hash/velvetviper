@@ -285,15 +285,9 @@ export default function Home() {
         <button
           onClick={() => {
             const w = window as any;
-            if (w.smartsupp) {
-              w.smartsupp('chat:open');
+            if (w.openSmartsuppChat) {
+              w.openSmartsuppChat();
             }
-            setTimeout(() => {
-              const btns = document.querySelectorAll(
-                '#smartsupp-widget-container button, #chat-application button, [data-testid="chat-button"]'
-              );
-              btns.forEach((btn) => (btn as HTMLElement).click());
-            }, 300);
           }}
           className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
         >

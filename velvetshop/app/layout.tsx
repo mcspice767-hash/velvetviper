@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import AuthGuard from "../lib/AuthGuard";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,7 +21,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full bg-[var(--bg)] text-[var(--text)]">
-        <AuthGuard>{children}</AuthGuard>
+        {children}
+
         <Script
           id="smartsupp"
           strategy="afterInteractive"
@@ -37,6 +37,20 @@ export default function RootLayout({
                 c.src='https://www.smartsuppchat.com/loader.js?';
                 s.parentNode.insertBefore(c,s);
               })(document);
+
+              window.openSmartsuppChat = function() {
+                var attempts = 0;
+                var interval = setInterval(function() {
+                  attempts++;
+                  if (window.smartsupp && typeof window.smartsupp === 'function') {
+                    window.smartsupp('chat:open');
+                    clearInterval(interval);
+                  } else if (attempts > 20) {
+                    clearInterval(interval);
+                    window.open('https://wa.me/+1234567890', '_blank');
+                  }
+                }, 300);
+              };
             `,
           }}
         />
