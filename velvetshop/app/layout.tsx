@@ -39,18 +39,30 @@ export default function RootLayout({
               })(document);
 
               window.openSmartsuppChat = function() {
-                var attempts = 0;
-                var interval = setInterval(function() {
-                  attempts++;
-                  if (window.smartsupp && typeof window.smartsupp === 'function') {
-                    window.smartsupp('chat:open');
-                    clearInterval(interval);
-                  } else if (attempts > 20) {
-                    clearInterval(interval);
-                    window.open('https://wa.me/+1234567890', '_blank');
-                  }
-                }, 300);
-              };
+  try {
+    // Method 1: Click the widget button directly
+    var widgetBtn = document.querySelector(
+      '#smartsupp-widget-container button, #chat-application button, .smartsupp-widget-open, [class*="smartsupp"] button'
+    );
+    if (widgetBtn) {
+      widgetBtn.click();
+      return;
+    }
+
+    // Method 2: Find smartsupp iframe
+    var iframe = document.querySelector('iframe[src*="smartsupp"]');
+    if (iframe) {
+      iframe.style.display = 'block';
+      return;
+    }
+
+    // Method 3: WhatsApp fallback
+    window.open('https://wa.me/YOURPHONENUMBER', '_blank');
+
+  } catch(e) {
+    window.open('https://wa.me/YOURPHONENUMBER', '_blank');
+  }
+};
             `,
           }}
         />
