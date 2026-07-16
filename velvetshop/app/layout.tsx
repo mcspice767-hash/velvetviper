@@ -6,12 +6,19 @@ export const metadata: Metadata = {
   title: "VelvetViper | Premium Reptile Marketplace",
   description: "VelvetViper is the luxury reptile marketplace for premium listings, feeders, and secure checkout.",
   themeColor: "#050505",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1.0,
-};
+  maximumScale: 5.0,
+  userScalable: true,
+  viewportFit: "cover",
+}
 
 export default function RootLayout({
   children,
