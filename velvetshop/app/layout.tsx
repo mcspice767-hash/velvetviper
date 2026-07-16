@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import AuthGuard from "../lib/AuthGuard";
 import "./globals.css";
 
@@ -22,6 +23,25 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full bg-[var(--bg)] text-[var(--text)]">
         <AuthGuard>{children}</AuthGuard>
+        <Script
+          id="smartsupp"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              var _smartsupp = _smartsupp || {};
+              _smartsupp.key = '206a5b2a55dc18f579751d4bc0238d81b164f5ed';
+              window.smartsupp||(function(d) {
+                var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
+                s=d.getElementsByTagName('script')[0];c=d.createElement('script');
+                c.type='text/javascript';c.charset='utf-8';c.async=true;
+                c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
+              })(document);
+            `,
+          }}
+        />
+        <noscript>
+          Powered by <a href="https://www.smartsupp.com" target="_blank" rel="noreferrer">Smartsupp</a>
+        </noscript>
       </body>
     </html>
   );

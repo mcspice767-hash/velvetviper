@@ -268,6 +268,33 @@ export default function Home() {
         </div>
       )}
 
+      {/* Floating Contact Buttons */}
+      <div className="fixed bottom-6 right-6 z-[150] flex flex-col gap-3">
+        {/* WhatsApp Button */}
+        <a
+          href="https://wa.me/YOURPHONENUMBER"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
+        >
+          <span className="text-2xl">💬</span>
+          <span className="text-sm">WhatsApp Us</span>
+        </a>
+
+        {/* Live Chat Button */}
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined' && (window as any).smartsupp) {
+              (window as any).smartsupp('chat:open');
+            }
+          }}
+          className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
+        >
+          <span className="text-2xl">🎧</span>
+          <span className="text-sm">Live Chat</span>
+        </button>
+      </div>
+
     </div>
   );
 }
