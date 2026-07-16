@@ -284,27 +284,16 @@ export default function Home() {
         {/* Live Chat Button */}
         <button
           onClick={() => {
-            const attempts = [
-              () => (window as any).smartsupp?.('chat:open'),
-              () => (window as any).Smartsupp?.('chat:open'),
-              () => (window as any).SmartsuppWidget?.open(),
-              () => document.querySelector<HTMLElement>('#smartsupp-widget-container button')?.click(),
-              () => document.querySelector<HTMLElement>('.ssupp-btn')?.click(),
-              () => document.querySelector<HTMLElement>('[data-testid="chat-button"]')?.click(),
-            ];
-
-            let opened = false;
-            for (const attempt of attempts) {
-              try {
-                attempt();
-                opened = true;
-                break;
-              } catch {}
+            const w = window as any;
+            if (w.smartsupp) {
+              w.smartsupp('chat:open');
             }
-
-            if (!opened) {
-              window.open('https://app.smartsupp.com', '_blank');
-            }
+            setTimeout(() => {
+              const btns = document.querySelectorAll(
+                '#smartsupp-widget-container button, #chat-application button, [data-testid="chat-button"]'
+              );
+              btns.forEach((btn) => (btn as HTMLElement).click());
+            }, 300);
           }}
           className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
         >
