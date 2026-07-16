@@ -107,8 +107,11 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl p-4 mb-6 text-sm text-gray-400">
-              Clicking <span className="text-[#c8ff00] font-medium">Continue to WhatsApp</span> will open a chat with the seller. Share your <span className="text-[#c8ff00] font-medium">{selectedMethod.label}</span> payment details to complete your order.
+            <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl p-4 mb-4 text-sm text-gray-400">
+              Clicking <span className="text-[#c8ff00] font-medium">Continue to WhatsApp</span> or <span className="text-[#c8ff00] font-medium">Continue to Live Chat</span> will open a chat with the seller. Share your <span className="text-[#c8ff00] font-medium">{selectedMethod.label}</span> payment details to complete your order.
+            </div>
+            <div className="bg-[#111] border border-[#c8ff00]/20 rounded-2xl p-4 mb-6 text-sm text-gray-400">
+              📸 <span className="text-[#c8ff00] font-medium">Screenshot required:</span> After making your payment, please send a <strong className="text-gray-200">screenshot of your payment confirmation</strong> to the seller to speed up processing.
             </div>
 
             <button

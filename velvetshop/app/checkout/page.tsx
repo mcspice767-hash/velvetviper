@@ -858,7 +858,10 @@ export default function CheckoutPage() {
               </div>
 
               <div className="modal-note">
-                Clicking <strong>Continue to WhatsApp</strong> will open a chat with the seller. Share your <strong>{activeMethod.label}</strong> payment details to complete your order.
+                Clicking <strong>Continue to WhatsApp</strong> or <strong>Continue to Live Chat</strong> will open a chat with the seller. Share your <strong>{activeMethod.label}</strong> payment details to complete your order.
+              </div>
+              <div className="modal-note" style={{ marginTop: "8px", borderColor: "rgba(200,255,0,0.2)", background: "rgba(200,255,0,0.04)" }}>
+                📸 <strong style={{ color: "#c8ff00" }}>Screenshot required:</strong> After making your payment, please send a <strong>screenshot of your payment confirmation</strong> to the seller to speed up processing.
               </div>
             </div>
 
