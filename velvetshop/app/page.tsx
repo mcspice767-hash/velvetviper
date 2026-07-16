@@ -284,16 +284,26 @@ export default function Home() {
         {/* Live Chat Button */}
         <button
           onClick={() => {
-            if (typeof window !== 'undefined' && (window as any).smartsupp) {
-              (window as any).smartsupp('chat:open');
-              return;
+            const attempts = [
+              () => (window as any).smartsupp?.('chat:open'),
+              () => (window as any).Smartsupp?.('chat:open'),
+              () => (window as any).SmartsuppWidget?.open(),
+              () => document.querySelector<HTMLElement>('#smartsupp-widget-container button')?.click(),
+              () => document.querySelector<HTMLElement>('.ssupp-btn')?.click(),
+              () => document.querySelector<HTMLElement>('[data-testid="chat-button"]')?.click(),
+            ];
+
+            let opened = false;
+            for (const attempt of attempts) {
+              try {
+                attempt();
+                opened = true;
+                break;
+              } catch {}
             }
-            if (typeof window !== 'undefined' && (window as any).SmartsuppWidget) {
-              (window as any).SmartsuppWidget.open();
-              return;
-            }
-            if (typeof window !== 'undefined') {
-              window.open('https://wa.me/YOURPHONENUMBER', '_blank');
+
+            if (!opened) {
+              window.open('https://app.smartsupp.com', '_blank');
             }
           }}
           className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
