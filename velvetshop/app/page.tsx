@@ -286,6 +286,14 @@ export default function Home() {
           onClick={() => {
             if (typeof window !== 'undefined' && (window as any).smartsupp) {
               (window as any).smartsupp('chat:open');
+              return;
+            }
+            if (typeof window !== 'undefined' && (window as any).SmartsuppWidget) {
+              (window as any).SmartsuppWidget.open();
+              return;
+            }
+            if (typeof window !== 'undefined') {
+              window.open('https://wa.me/YOURPHONENUMBER', '_blank');
             }
           }}
           className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
