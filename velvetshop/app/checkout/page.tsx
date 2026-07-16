@@ -48,6 +48,36 @@ const PAYMENT_METHODS = [
       `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* Venmo\n*Name:* ${name}\n*Total:* $${total.toFixed(2)}\n\nPlease send your Venmo handle to complete payment.`,
   },
   {
+    id: "zelle",
+    label: "Zelle",
+    color: "#7414ca",
+    accent: "#5c0fa3",
+    emoji: "🏦",
+    logo: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px"><rect width="24" height="24" rx="6" fill="#7414ca"/><text x="12" y="17" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Georgia, serif">z</text></svg>`,
+    whatsappMsg: (total: number, name: string) =>
+      `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* Zelle\n*Name:* ${name}\n*Total:* $${total.toFixed(2)}\n\nPlease send your Zelle details to complete payment.`,
+  },
+  {
+    id: "bitcoin",
+    label: "Bitcoin",
+    color: "#f7931a",
+    accent: "#b76709",
+    emoji: "🪙",
+    logo: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px"><rect width="24" height="24" rx="6" fill="#f7931a"/><text x="12" y="17" text-anchor="middle" font-size="13" font-weight="bold" fill="white" font-family="Georgia, serif">₿</text></svg>`,
+    whatsappMsg: (total: number, name: string) =>
+      `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* Bitcoin (Crypto)\n*Name:* ${name}\n*Total:* $${total.toFixed(2)}\n\nPlease send your Bitcoin wallet address to complete payment.`,
+  },
+  {
+    id: "banktransfer",
+    label: "Bank Transfer",
+    color: "#4f46e5",
+    accent: "#3730a3",
+    emoji: "🏛",
+    logo: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px"><rect width="24" height="24" rx="6" fill="#4f46e5"/><text x="12" y="17" text-anchor="middle" font-size="13" font-weight="bold" fill="white" font-family="Arial">🏛</text></svg>`,
+    whatsappMsg: (total: number, name: string) =>
+      `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* Bank Transfer\n*Name:* ${name}\n*Total:* $${total.toFixed(2)}\n\nPlease send your Bank Transfer Routing & Account details to complete payment.`,
+  },
+  {
     id: "applepay",
     label: "Apple Pay",
     color: "#000000",
@@ -79,13 +109,101 @@ export default function CheckoutPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [step, setStep] = useState<1 | 2>(1);
+  const [giftCode, setGiftCode] = useState("");
+  const [giftLoading, setGiftLoading] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
+
+  const handleGiftCard = async () => {
+    if (!giftCode.trim()) {
+      setGiftMessage("Please enter a gift card code");
+      return;
+    }
+
+    setGiftLoading(true);
+    setGiftMessage("");
+
+    try {
+      const { data, error } = await supabase
+        .from("gift_cards")
+        .select("*")
+        .eq("code", giftCode.toUpperCase())
+        .eq("used", false)
+        .single();
+
+      if (error || !data) {
+        setGiftMessage("Invalid or already used gift card");
+        setGiftLoading(false);
+        return;
+      }
+
+      const userObj = await supabase.auth.getUser();
+      const userEmail = userObj.data.user?.email || "anonymous_buyer";
+
+      const { error: updateError } = await supabase
+        .from("gift_cards")
+        .update({ used: true, used_by: userEmail })
+        .eq("id", data.id);
+
+      if (updateError) {
+        setGiftMessage("Redemption failed: " + updateError.message);
+        setGiftLoading(false);
+        return;
+      }
+
+      setGiftMessage("✅ Gift card accepted! Order total is covered.");
+
+      const orderData = {
+        customer_name: form.fullName,
+        customer_email: userEmail,
+        customer_phone: form.phone,
+        shipping_address: form.address,
+        delivery_notes: form.notes,
+        payment_method: `Gift Card (${giftCode.toUpperCase()})`,
+        items: cart,
+        total,
+        status: "paid",
+      };
+
+      const { data: savedOrder, error: orderError } = await supabase
+        .from("orders")
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) {
+        alert("Failed to save order: " + orderError.message);
+        setGiftLoading(false);
+        return;
+      }
+
+      try {
+        await fetch("/api/send-order-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: savedOrder }),
+        });
+      } catch (_) { }
+
+      localStorage.removeItem("velvetviper_cart");
+      localStorage.setItem("last_order", JSON.stringify(savedOrder));
+
+      setTimeout(() => {
+        router.push("/order-confirmation");
+      }, 1500);
+
+    } catch (err: any) {
+      setGiftMessage("An error occurred: " + err.message);
+    } finally {
+      setGiftLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Load cart from localStorage if using persistent cart
     // For now we use a demo cart if none found
     const saved = localStorage.getItem("velvetviper_cart");
     if (saved) {
-      try { setCart(JSON.parse(saved)); } catch {}
+      try { setCart(JSON.parse(saved)); } catch { }
     } else {
       // Demo items so page isn't empty
       setCart([
@@ -162,7 +280,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order: savedOrder }),
       });
-    } catch (_) {}
+    } catch (_) { }
 
     // 4. Clear cart
     localStorage.removeItem("velvetviper_cart");
@@ -174,6 +292,72 @@ export default function CheckoutPage() {
     const msg = `${method.whatsappMsg(total, form.fullName)}\n\n*Order ID:* #${savedOrder.id.slice(0, 8).toUpperCase()}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
+
+    // 6. Redirect to confirmation page
+    setShowPaymentModal(false);
+    router.push("/order-confirmation");
+  };
+
+  const handleLiveChatPayment = async () => {
+    const method = PAYMENT_METHODS.find((m) => m.id === selectedPayment);
+    if (!method) return;
+
+    // 1. Save order to Supabase
+    const orderData = {
+      customer_name: form.fullName,
+      customer_email: (await supabase.auth.getUser()).data.user?.email || "",
+      customer_phone: form.phone,
+      shipping_address: form.address,
+      delivery_notes: form.notes,
+      payment_method: `${method.label} (via Live Chat)`,
+      items: cart,
+      total,
+      status: "pending",
+    };
+
+    const { data: savedOrder, error } = await supabase
+      .from("orders")
+      .insert(orderData)
+      .select()
+      .single();
+
+    if (error) {
+      alert("Failed to save order: " + error.message);
+      return;
+    }
+
+    // 2. Save to localStorage for confirmation page
+    localStorage.setItem("last_order", JSON.stringify(savedOrder));
+
+    // 3. Send confirmation email
+    try {
+      await fetch("/api/send-order-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: savedOrder }),
+      });
+    } catch (_) { }
+
+    // 4. Clear cart
+    localStorage.removeItem("velvetviper_cart");
+
+    // 5. Open Live Chat with pre-filled message
+    const itemList = cart
+      .map((i) => `• ${i.species} (${i.name || "Unnamed"}) × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
+      .join("\n");
+
+    const msg = `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* ${method.label} (via Live Chat)\n*Name:* ${form.fullName}\n*Total:* $${total.toFixed(2)}\n\n*Order ID:* #${savedOrder.id.slice(0, 8).toUpperCase()}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
+
+    if (typeof window !== "undefined" && (window as any).smartsupp) {
+      try {
+        (window as any).smartsupp("chat:open");
+        (window as any).smartsupp("chat:message", msg);
+      } catch (chatError) {
+        console.error("Smartsupp Error:", chatError);
+      }
+    } else {
+      alert("Note: Smartsupp Live Chat widget was not loaded. Your order has still been recorded! Copy this details and share when chat is available:\n\n" + msg);
+    }
 
     // 6. Redirect to confirmation page
     setShowPaymentModal(false);
@@ -351,6 +535,12 @@ export default function CheckoutPage() {
         .pm-cashapp:hover .pm-btn-label { color:#00d632; }
         .pm-venmo:hover { border-color:#3d95ce;background:rgba(61,149,206,0.06); }
         .pm-venmo:hover .pm-btn-label { color:#3d95ce; }
+        .pm-zelle:hover { border-color:#7414ca;background:rgba(116,20,202,0.06); }
+        .pm-zelle:hover .pm-btn-label { color:#7414ca; }
+        .pm-bitcoin:hover { border-color:#f7931a;background:rgba(247,147,26,0.06); }
+        .pm-bitcoin:hover .pm-btn-label { color:#f7931a; }
+        .pm-banktransfer:hover { border-color:#4f46e5;background:rgba(79,70,229,0.06); }
+        .pm-banktransfer:hover .pm-btn-label { color:#4f46e5; }
         .pm-applepay:hover { border-color:#aaa;background:rgba(180,180,180,0.06); }
         .pm-applepay:hover .pm-btn-label { color:#ccc; }
         .pm-chime:hover { border-color:#00c08b;background:rgba(0,192,139,0.06); }
@@ -490,13 +680,13 @@ export default function CheckoutPage() {
           {/* LEFT COLUMN */}
           <div>
             {/* Cart summary */}
-            <div className="co-card" style={{marginBottom:"24px"}}>
+            <div className="co-card" style={{ marginBottom: "24px" }}>
               <div className="co-card-title">🛒 Order Summary ({itemCount} {itemCount === 1 ? "item" : "items"})</div>
               {cart.length === 0 ? (
                 <div className="empty-cart">
                   <div className="empty-cart-icon">🛒</div>
                   <p className="empty-cart-text">Your cart is empty</p>
-                  <Link href="/browse" style={{color:"#c8ff00",textDecoration:"none",fontSize:"0.9rem"}}>← Continue browsing</Link>
+                  <Link href="/browse" style={{ color: "#c8ff00", textDecoration: "none", fontSize: "0.9rem" }}>← Continue browsing</Link>
                 </div>
               ) : (
                 cart.map((item) => (
@@ -523,25 +713,25 @@ export default function CheckoutPage() {
                   <div className="form-field fg-full">
                     <label className="form-label">Full Name *</label>
                     <input className={`form-input ${formErrors.fullName ? "err" : ""}`} placeholder="John Doe"
-                      value={form.fullName} onChange={(e) => setForm({...form, fullName: e.target.value})} />
+                      value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
                     {formErrors.fullName && <span className="form-error">{formErrors.fullName}</span>}
                   </div>
                   <div className="form-field fg-full">
                     <label className="form-label">Shipping Address *</label>
                     <input className={`form-input ${formErrors.address ? "err" : ""}`} placeholder="123 Main St, City, State, ZIP"
-                      value={form.address} onChange={(e) => setForm({...form, address: e.target.value})} />
+                      value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
                     {formErrors.address && <span className="form-error">{formErrors.address}</span>}
                   </div>
                   <div className="form-field fg-full">
                     <label className="form-label">Phone Number *</label>
                     <input className={`form-input ${formErrors.phone ? "err" : ""}`} placeholder="+1 (555) 000-0000" type="tel"
-                      value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} />
+                      value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                     {formErrors.phone && <span className="form-error">{formErrors.phone}</span>}
                   </div>
                   <div className="form-field fg-full">
                     <label className="form-label">Special Delivery Notes</label>
                     <textarea className="form-input form-textarea" placeholder="Any special instructions for delivery..."
-                      value={form.notes} onChange={(e) => setForm({...form, notes: e.target.value})} />
+                      value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                   </div>
                 </div>
                 <button className="proceed-btn" onClick={handleProceed} disabled={cart.length === 0}>
@@ -555,17 +745,45 @@ export default function CheckoutPage() {
               <div className="co-card">
                 <button className="back-btn" onClick={() => setStep(1)}>← Back to Details</button>
                 <div className="co-card-title">💳 Choose Payment Method</div>
-                <p style={{fontSize:"0.83rem",color:"#555",marginBottom:"20px",lineHeight:"1.6"}}>
+                <p style={{ fontSize: "0.83rem", color: "#555", marginBottom: "20px", lineHeight: "1.6" }}>
                   Select your preferred payment method. You'll be directed to confirm via WhatsApp.
                 </p>
                 <div className="pm-grid">
                   {PAYMENT_METHODS.map((method) => (
                     <button key={method.id} className={`pm-btn pm-${method.id}`}
                       onClick={() => handlePaymentClick(method.id)}>
-                      <div className="pm-logo-wrap" dangerouslySetInnerHTML={{__html: method.logo}} />
+                      <div className="pm-logo-wrap" dangerouslySetInnerHTML={{ __html: method.logo }} />
                       <span className="pm-btn-label">{method.label}</span>
                     </button>
                   ))}
+                </div>
+
+                {/* Gift Card section */}
+                <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #1c1c1c" }}>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.3rem", fontWeight: 700, marginBottom: "12px", color: "#c8ff00" }}>Have a Gift Card?</h3>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    <input
+                      type="text"
+                      value={giftCode}
+                      onChange={(e) => setGiftCode(e.target.value)}
+                      placeholder="Enter Gift Card Code"
+                      className="form-input"
+                      style={{ flex: 1, textTransform: "uppercase" }}
+                    />
+                    <button
+                      onClick={handleGiftCard}
+                      disabled={giftLoading}
+                      className="proceed-btn"
+                      style={{ margin: 0, padding: "0 24px", width: "auto", minWidth: "120px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      {giftLoading ? "Redeeming..." : "Redeem"}
+                    </button>
+                  </div>
+                  {giftMessage && (
+                    <p style={{ fontSize: "0.85rem", color: giftMessage.startsWith("✅") ? "#c8ff05" : "#ef4444", marginTop: "8px" }}>
+                      {giftMessage}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -573,7 +791,7 @@ export default function CheckoutPage() {
 
           {/* RIGHT COLUMN: Order total */}
           <div>
-            <div className="co-card" style={{position:"sticky",top:"80px"}}>
+            <div className="co-card" style={{ position: "sticky", top: "80px" }}>
               <div className="co-card-title">🧾 Total</div>
               {cart.map((item) => (
                 <div key={item.id} className="summary-row">
@@ -583,22 +801,22 @@ export default function CheckoutPage() {
               ))}
               <div className="summary-row">
                 <span>Shipping</span>
-                <span style={{color:"#c8ff00"}}>To be arranged</span>
+                <span style={{ color: "#c8ff00" }}>To be arranged</span>
               </div>
               <div className="summary-total">
                 <span className="summary-total-label">Total</span>
                 <span className="summary-total-price">${total.toFixed(2)}</span>
               </div>
 
-              <div style={{marginTop:"24px",padding:"16px",background:"rgba(200,255,0,0.04)",border:"1px solid rgba(200,255,0,0.1)",borderRadius:"14px"}}>
-                <p style={{fontSize:"0.75rem",color:"#666",lineHeight:"1.6"}}>
-                  🔒 <strong style={{color:"#888"}}>Secure checkout.</strong> Payment is confirmed directly with the seller via WhatsApp for your safety.
+              <div style={{ marginTop: "24px", padding: "16px", background: "rgba(200,255,0,0.04)", border: "1px solid rgba(200,255,0,0.1)", borderRadius: "14px" }}>
+                <p style={{ fontSize: "0.75rem", color: "#666", lineHeight: "1.6" }}>
+                  🔒 <strong style={{ color: "#888" }}>Secure checkout.</strong> Payment is confirmed directly with the seller via WhatsApp for your safety.
                 </p>
               </div>
 
               {step === 1 && (
-                <div style={{marginTop:"16px",textAlign:"center"}}>
-                  <Link href="/browse" style={{fontSize:"0.8rem",color:"#444",textDecoration:"none"}}>← Continue shopping</Link>
+                <div style={{ marginTop: "16px", textAlign: "center" }}>
+                  <Link href="/browse" style={{ fontSize: "0.8rem", color: "#444", textDecoration: "none" }}>← Continue shopping</Link>
                 </div>
               )}
             </div>
@@ -611,8 +829,8 @@ export default function CheckoutPage() {
         <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-method-logo" style={{background: activeMethod.color + "22", border: `1px solid ${activeMethod.color}44`}}
-                dangerouslySetInnerHTML={{__html: activeMethod.logo}} />
+              <div className="modal-method-logo" style={{ background: activeMethod.color + "22", border: `1px solid ${activeMethod.color}44` }}
+                dangerouslySetInnerHTML={{ __html: activeMethod.logo }} />
               <div className="modal-title">Confirm with {activeMethod.label}</div>
               <div className="modal-subtitle">Review your order before continuing to WhatsApp</div>
             </div>
@@ -624,7 +842,7 @@ export default function CheckoutPage() {
               </div>
               <div className="modal-info-row">
                 <span className="modal-info-label">Ship to</span>
-                <span className="modal-info-value" style={{maxWidth:"180px",textAlign:"right",fontSize:"0.8rem"}}>{form.address}</span>
+                <span className="modal-info-value" style={{ maxWidth: "180px", textAlign: "right", fontSize: "0.8rem" }}>{form.address}</span>
               </div>
               <div className="modal-info-row">
                 <span className="modal-info-label">Items</span>
@@ -646,11 +864,19 @@ export default function CheckoutPage() {
 
             <div className="modal-footer">
               <button className="modal-confirm-btn"
-                style={{background: activeMethod.color, color: activeMethod.id === "cashapp" || activeMethod.id === "chime" ? "#000" : "#fff"}}
+                style={{ background: activeMethod.color, color: activeMethod.id === "cashapp" || activeMethod.id === "chime" ? "#000" : "#fff" }}
                 onClick={handleWhatsApp}>
                 <span className="wa-icon">💬</span>
                 Continue to WhatsApp
               </button>
+
+              <button className="modal-confirm-btn"
+                style={{ background: "#2563eb", color: "#fff", marginTop: "4px" }}
+                onClick={handleLiveChatPayment}>
+                <span className="wa-icon">🎧</span>
+                Continue to Live Chat
+              </button>
+
               <button className="modal-cancel-btn" onClick={() => setShowPaymentModal(false)}>Cancel</button>
             </div>
           </div>

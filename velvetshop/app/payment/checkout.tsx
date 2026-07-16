@@ -15,6 +15,8 @@ const PAYMENT_METHODS = [
   { id: "paypal", label: "PayPal", icon: "💰", color: "bg-blue-500" },
   { id: "venmo", label: "Venmo", icon: "📱", color: "bg-blue-400" },
   { id: "zelle", label: "Zelle", icon: "🏦", color: "bg-purple-500" },
+  { id: "bitcoin", label: "Bitcoin", icon: "🪙", color: "bg-yellow-500" },
+  { id: "banktransfer", label: "Bank Transfer", icon: "🏛", color: "bg-indigo-600" },
   { id: "applepay", label: "Apple Pay", icon: "🍎", color: "bg-gray-700" },
   { id: "revolut", label: "Revolut", icon: "🔄", color: "bg-indigo-500" },
   { id: "chime", label: "Chime", icon: "🏧", color: "bg-green-600" },
@@ -116,6 +118,23 @@ export default function CheckoutPage() {
               <span>💬</span> Continue to WhatsApp
             </button>
             <button
+              onClick={() => {
+                if (typeof window !== "undefined" && (window as any).smartsupp) {
+                  const itemList = cartItems
+                    .map((i) => `• ${i.name} × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
+                    .join("\n");
+                  const msg = `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* ${selectedMethod.label} (via Live Chat)\n*Name:* ${formData.fullName}\n*Total:* $${total.toFixed(2)}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${formData.city}, ${formData.country}`;
+                  (window as any).smartsupp("chat:open");
+                  (window as any).smartsupp("chat:message", msg);
+                }
+                setShowConfirmModal(false);
+                setOrderStep("confirmation");
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition mb-3"
+            >
+              <span>🎧</span> Continue to Live Chat
+            </button>
+            <button
               onClick={() => setShowConfirmModal(false)}
               className="w-full text-gray-500 hover:text-gray-300 py-3 transition"
             >
@@ -136,11 +155,10 @@ export default function CheckoutPage() {
           <div className="flex items-center gap-4">
             {["cart", "shipping", "payment", "confirmation"].map((step, idx) => (
               <div key={step} className="flex items-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                  orderStep === step ? "bg-[#c8ff00] text-black" :
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${orderStep === step ? "bg-[#c8ff00] text-black" :
                   ["cart", "shipping", "payment"].indexOf(orderStep) > idx ? "bg-green-600 text-white" :
-                  "bg-[#2a2a2a] text-gray-400"
-                }`}>
+                    "bg-[#2a2a2a] text-gray-400"
+                  }`}>
                   {idx + 1}
                 </div>
                 {idx < 3 && <div className="flex-1 h-1 bg-[#2a2a2a] mx-2" />}
@@ -231,9 +249,8 @@ export default function CheckoutPage() {
                     <div
                       key={method.id}
                       onClick={() => setSelectedPayment(method.id)}
-                      className={`border-2 rounded-2xl p-4 cursor-pointer transition-all flex items-center gap-3 ${
-                        selectedPayment === method.id ? "border-[#c8ff00] bg-[#1a1a1a]" : "border-[#2a2a2a] hover:border-gray-500"
-                      }`}
+                      className={`border-2 rounded-2xl p-4 cursor-pointer transition-all flex items-center gap-3 ${selectedPayment === method.id ? "border-[#c8ff00] bg-[#1a1a1a]" : "border-[#2a2a2a] hover:border-gray-500"
+                        }`}
                     >
                       <div className={`w-10 h-10 ${method.color} rounded-xl flex items-center justify-center text-xl flex-shrink-0`}>
                         {method.icon}
@@ -262,11 +279,10 @@ export default function CheckoutPage() {
                   <button onClick={() => setOrderStep("shipping")} className="flex-1 border border-[#2a2a2a] py-4 rounded-2xl font-bold hover:border-[#c8ff00]">Back</button>
                   <button
                     onClick={handleContinue}
-                    className={`flex-1 py-4 rounded-2xl font-bold transition flex items-center justify-center gap-2 ${
-                      selectedPayment === "livechat"
-                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                        : "bg-green-500 hover:bg-green-600 text-white"
-                    }`}
+                    className={`flex-1 py-4 rounded-2xl font-bold transition flex items-center justify-center gap-2 ${selectedPayment === "livechat"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-green-500 hover:bg-green-600 text-white"
+                      }`}
                   >
                     {selectedPayment === "livechat" ? "🎧 Open Live Chat" : "💬 Continue to WhatsApp"}
                   </button>
