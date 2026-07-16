@@ -281,21 +281,8 @@ export default function Home() {
           <span className="text-sm">WhatsApp Us</span>
         </a>
 
-        {/* Live Chat Button */}
-        <button
-          onClick={() => {
-            const w = window as any;
-            if (w.openSmartsuppChat) {
-              w.openSmartsuppChat();
-            }
-          }}
-          className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
-        >
-          <span className="text-2xl">🎧</span>
-          <span className="text-sm">Live Chat</span>
-        </button>
+        
       </div>
-
     </div>
   );
 }
