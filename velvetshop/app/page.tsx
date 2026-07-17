@@ -285,6 +285,7 @@ export default function Home() {
         <button
           onClick={() => {
             const w = window as any;
+            
             if (w.openSmartsuppChat) {
               w.openSmartsuppChat();
             }
