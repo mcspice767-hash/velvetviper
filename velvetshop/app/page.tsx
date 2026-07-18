@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
-import Navbar from "../components/Navbar";
 
 interface Listing {
   id: string;
@@ -32,6 +31,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [banners] = useState([
     { id: 1, text: "🐍 Welcome to VelvetViper! Find your perfect reptile companion today.", color: "rgba(200,255,0,0.08)" },
@@ -92,7 +92,78 @@ export default function Home() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#e8e0d0] font-serif">
-      <Navbar cart={cart} onCartClick={() => setShowCart(true)} />
+      {/* NAV */}
+      <nav className="fixed top-0 w-full bg-black/95 border-b border-[#2a2a2a] z-50 backdrop-blur">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-2xl">🐍</span>
+            <span className="text-lg sm:text-2xl font-bold tracking-tight">VELVETVIPER</span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-6 text-sm">
+            <Link href="/" className="hover:text-[#c8ff00]">Home</Link>
+            <Link href="/browse" className="hover:text-[#c8ff00]">Browse</Link>
+            <Link href="/my-listings" className="hover:text-[#c8ff00]">My Listings</Link>
+            <Link href="/login" className="hover:text-[#c8ff00]">Login</Link>
+            <button onClick={() => setShowCart(!showCart)} className="relative text-xl hover:text-[#c8ff00]">
+              🛒
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#c8ff00] text-black text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="flex lg:hidden items-center gap-3">
+            <button onClick={() => setShowCart(!showCart)} className="relative text-xl">
+              🛒
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#c8ff00] text-black text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+            <button onClick={() => setMenuOpen(true)} className="text-2xl p-1">☰</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Fullscreen Overlay */}
+      {menuOpen && (
+        <div className="fixed inset-0 bg-black z-[999] flex flex-col">
+          <div className="flex justify-between items-center px-6 py-6 border-b border-[#2a2a2a]">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🐍</span>
+              <span className="text-xl font-bold">VELVETVIPER</span>
+            </div>
+            <button 
+              onClick={() => setMenuOpen(false)} 
+              className="text-3xl text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="flex flex-col px-6 py-8 gap-6 text-2xl font-bold">
+            <Link href="/" onClick={() => setMenuOpen(false)} className="hover:text-[#c8ff00] py-2 border-b border-[#1a1a1a]">Home</Link>
+            <Link href="/browse" onClick={() => setMenuOpen(false)} className="hover:text-[#c8ff00] py-2 border-b border-[#1a1a1a]">Browse Reptiles</Link>
+            <Link href="/my-listings" onClick={() => setMenuOpen(false)} className="hover:text-[#c8ff00] py-2 border-b border-[#1a1a1a]">My Listings</Link>
+            <Link href="/login" onClick={() => setMenuOpen(false)} className="hover:text-[#c8ff00] py-2 border-b border-[#1a1a1a]">Login</Link>
+            <Link href="/signup" onClick={() => setMenuOpen(false)} className="hover:text-[#c8ff00] py-2 border-b border-[#1a1a1a]">Sign Up</Link>
+          </div>
+
+          <div className="mt-auto px-6 pb-12">
+            <Link 
+              href="/browse" 
+              onClick={() => setMenuOpen(false)}
+              className="block w-full bg-[#c8ff00] text-black text-center py-4 rounded-2xl font-bold text-lg"
+            >
+              Browse Reptiles →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Banners */}
       <div className="pt-20">
@@ -269,20 +340,29 @@ export default function Home() {
       )}
 
       {/* Floating Contact Buttons */}
-      <div className="fixed bottom-4 right-4 z-[150] flex flex-col gap-2 sm:bottom-6 sm:right-6 sm:gap-3">
-        {/* WhatsApp Button */}
+      <div className="fixed bottom-4 right-4 z-[150] flex flex-col gap-2">
+        {/* WhatsApp */}
         <a
-          href="https://wa.me/+15056715584"
+          href="https://wa.me/15056715584"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-full bg-green-500 px-3 py-2 text-white shadow-2xl transition-all hover:scale-105 hover:bg-green-600 sm:gap-3 sm:px-5 sm:py-3"
+          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white pl-3 pr-4 py-2 rounded-full shadow-xl transition text-sm font-medium"
         >
-          <span className="text-xl sm:text-2xl">💬</span>
-          <span className="text-xs font-medium sm:text-sm">WhatsApp Us</span>
+          <span className="text-lg">💬</span>
+          <span className="hidden sm:inline">WhatsApp</span>
         </a>
 
-        {/* Live Chat Button */}
-        
+        {/* Live Chat */}
+        <button
+          onClick={() => {
+            const w = window as any;
+            if (w.openSmartsuppChat) w.openSmartsuppChat();
+          }}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white pl-3 pr-4 py-2 rounded-full shadow-xl transition text-sm font-medium"
+        >
+          <span className="text-lg">🎧</span>
+          <span className="hidden sm:inline">Live Chat</span>
+        </button>
       </div>
     </div>
   );
