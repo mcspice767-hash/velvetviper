@@ -282,19 +282,7 @@ export default function Home() {
         </a>
 
         {/* Live Chat Button */}
-        <button
-          onClick={() => {
-            const w = window as any;
-
-            if (w.openSmartsuppChat) {
-              w.openSmartsuppChat();
-            }
-          }}
-          className="flex items-center gap-2 rounded-full bg-blue-600 px-3 py-2 text-white shadow-2xl transition-all hover:scale-105 hover:bg-blue-700 sm:gap-3 sm:px-5 sm:py-3"
-        >
-          <span className="text-xl sm:text-2xl">🎧</span>
-          <span className="text-xs font-medium sm:text-sm">Live Chat</span>
-        </button>
+        
       </div>
     </div>
   );
