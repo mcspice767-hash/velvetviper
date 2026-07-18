@@ -91,7 +91,7 @@ export default function Home() {
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e8e0d0] font-serif">
+    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#e8e0d0] font-serif">
       <Navbar cart={cart} onCartClick={() => setShowCart(true)} />
 
       {/* Banners */}
@@ -104,21 +104,21 @@ export default function Home() {
       </div>
 
       {/* Hero */}
-      <div className="max-w-5xl mx-auto text-center pt-24 pb-16 px-4 md:px-6">
-        <h2 className="text-6xl md:text-7xl font-bold tracking-tighter mb-6">
+      <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <h2 className="mb-6 text-4xl font-bold tracking-tighter sm:text-5xl lg:text-7xl">
           Rehome Reptiles.<br />Responsibly.
         </h2>
-        <p className="text-xl text-gray-400">Premium marketplace for UK, USA & Canada</p>
-        <div className="mt-10 flex gap-4 justify-center">
-          <Link href="/browse" className="bg-[#c8ff00] text-black px-10 py-4 rounded-full font-semibold hover:bg-white transition">Browse Reptiles</Link>
+        <p className="text-base text-gray-400 sm:text-lg lg:text-xl">Premium marketplace for UK, USA & Canada</p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-10 sm:flex-row">
+          <Link href="/browse" className="w-full rounded-full bg-[#c8ff00] px-6 py-3 text-sm font-semibold text-black transition hover:bg-white sm:w-auto sm:px-8 sm:py-4 sm:text-base">Browse Reptiles</Link>
         </div>
       </div>
 
       {/* Categories */}
-      <div className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="text-[#c8ff00] tracking-widest text-sm mb-3">EXPLORE</div>
-        <h3 className="text-4xl md:text-5xl font-bold mb-10">Shop by Category</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
+        <div className="mb-3 text-xs tracking-widest text-[#c8ff00] sm:text-sm">EXPLORE</div>
+        <h3 className="mb-8 text-2xl font-bold sm:mb-10 sm:text-3xl lg:text-4xl">Shop by Category</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
           {[
             { emoji: "🐍", title: "Live Reptiles", desc: "Snakes, geckos, lizards & more", href: "/browse" },
             { emoji: "🏠", title: "Housing & Enclosures", desc: "Tanks, vivariums & hides", href: "/housing" },
@@ -126,48 +126,48 @@ export default function Home() {
             { emoji: "💊", title: "Health & Grooming", desc: "Supplements & care", href: "/health" },
             { emoji: "🎮", title: "Accessories", desc: "Décor, substrate & tools", href: "/accessories" },
           ].map((cat, i) => (
-            <Link key={i} href={cat.href} className="bg-[#111] border border-[#2a2a2a] hover:border-[#c8ff00] rounded-3xl p-8 cursor-pointer transition group">
-              <div className="text-6xl mb-6 group-hover:scale-110 transition">{cat.emoji}</div>
-              <h4 className="text-2xl font-bold mb-2">{cat.title}</h4>
-              <p className="text-gray-500">{cat.desc}</p>
+            <Link key={i} href={cat.href} className="group cursor-pointer rounded-2xl border border-[#2a2a2a] bg-[#111] p-4 transition hover:border-[#c8ff00] sm:rounded-3xl sm:p-6 lg:p-8">
+              <div className="mb-4 text-5xl transition group-hover:scale-110 sm:mb-6 sm:text-6xl">{cat.emoji}</div>
+              <h4 className="mb-2 text-xl font-bold sm:text-2xl">{cat.title}</h4>
+              <p className="text-sm text-gray-500 sm:text-base">{cat.desc}</p>
             </Link>
           ))}
         </div>
       </div>
 
       {/* Featured Listings */}
-      <div className="max-w-7xl mx-auto px-6 pb-24">
-        <h3 className="text-4xl md:text-5xl font-bold mb-8">Featured Reptiles</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 sm:pb-24 lg:px-8">
+        <h3 className="mb-8 text-2xl font-bold sm:text-3xl lg:text-4xl">Featured Reptiles</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
           {filteredListings.slice(0, 9).map(listing => {
             const curr = getCurrency(listing.country);
             return (
-              <div key={listing.id} className="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition group cursor-pointer" onClick={() => setSelectedListing(listing)}>
-                <div className="flex gap-4">
-                  <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <div key={listing.id} className="group cursor-pointer rounded-2xl bg-white p-4 shadow-lg transition hover:shadow-xl sm:rounded-3xl sm:p-6" onClick={() => setSelectedListing(listing)}>
+                <div className="flex gap-3 sm:gap-4">
+                  <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-gray-100 sm:h-24 sm:w-24">
                     {listing.image_url ? (
-                      <img src={listing.image_url} alt={listing.species} className="w-full h-full object-cover rounded-2xl" />
+                      <img src={listing.image_url} alt={listing.species} className="h-full w-full rounded-2xl object-cover" />
                     ) : (
-                      <div className="text-gray-400 text-2xl">🐍</div>
+                      <div className="text-2xl text-gray-400">🐍</div>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-bold text-lg text-black">{listing.species}</h3>
-                        <p className="text-gray-600 text-sm">{listing.name || "Unnamed"}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="text-base font-bold text-black sm:text-lg">{listing.species}</h3>
+                        <p className="text-sm text-gray-600">{listing.name || "Unnamed"}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-black font-bold text-lg">{curr}{listing.price}</div>
-                        <div className="text-gray-500 text-xs">{listing.location}</div>
+                        <div className="text-base font-bold text-black sm:text-lg">{curr}{listing.price}</div>
+                        <div className="text-xs text-gray-500">{listing.location}</div>
                       </div>
                     </div>
-                    <div className="flex gap-2 mb-3">
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{listing.gender || "Unknown"}</span>
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{listing.health || "Healthy"}</span>
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{listing.availability || "Available"}</span>
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-700 sm:text-xs">{listing.gender || "Unknown"}</span>
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-700 sm:text-xs">{listing.health || "Healthy"}</span>
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-700 sm:text-xs">{listing.availability || "Available"}</span>
                     </div>
-                    <p className="text-gray-600 text-sm line-clamp-2">{listing.description || "No description available."}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{listing.description || "No description available."}</p>
                   </div>
                 </div>
               </div>
@@ -269,31 +269,31 @@ export default function Home() {
       )}
 
       {/* Floating Contact Buttons */}
-      <div className="fixed bottom-6 right-6 z-[150] flex flex-col gap-3">
+      <div className="fixed bottom-4 right-4 z-[150] flex flex-col gap-2 sm:bottom-6 sm:right-6 sm:gap-3">
         {/* WhatsApp Button */}
         <a
           href="https://wa.me/+15056715584"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
+          className="flex items-center gap-2 rounded-full bg-green-500 px-3 py-2 text-white shadow-2xl transition-all hover:scale-105 hover:bg-green-600 sm:gap-3 sm:px-5 sm:py-3"
         >
-          <span className="text-2xl">💬</span>
-          <span className="text-sm">WhatsApp Us</span>
+          <span className="text-xl sm:text-2xl">💬</span>
+          <span className="text-xs font-medium sm:text-sm">WhatsApp Us</span>
         </a>
 
         {/* Live Chat Button */}
         <button
           onClick={() => {
             const w = window as any;
-            
+
             if (w.openSmartsuppChat) {
               w.openSmartsuppChat();
             }
           }}
-          className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 font-medium"
+          className="flex items-center gap-2 rounded-full bg-blue-600 px-3 py-2 text-white shadow-2xl transition-all hover:scale-105 hover:bg-blue-700 sm:gap-3 sm:px-5 sm:py-3"
         >
-          <span className="text-2xl">🎧</span>
-          <span className="text-sm">Live Chat</span>
+          <span className="text-xl sm:text-2xl">🎧</span>
+          <span className="text-xs font-medium sm:text-sm">Live Chat</span>
         </button>
       </div>
     </div>

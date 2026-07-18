@@ -26,8 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full bg-[var(--bg)] text-[var(--text)]">
+    <html lang="en" className="h-full overflow-x-hidden antialiased">
+      <body
+        className="min-h-full overflow-x-hidden bg-[var(--bg)] text-[var(--text)]"
+        style={{ WebkitTextSizeAdjust: "100%", WebkitOverflowScrolling: "touch" }}
+      >
         {children}
 
         <SmartsuppChat />
