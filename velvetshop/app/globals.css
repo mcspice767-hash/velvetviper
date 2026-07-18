@@ -523,15 +523,17 @@ main {
   position: fixed;
   inset: 0;
   z-index: 115;
-  transform: translateX(100%);
-  transition: transform 0.25s ease;
   display: flex;
   justify-content: flex-end;
+  transform: translateX(100%);
+  opacity: 0;
   pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 .navbar-drawer.open {
   transform: translateX(0);
+  opacity: 1;
   pointer-events: auto;
 }
 
@@ -544,6 +546,8 @@ main {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .drawer-links,
@@ -556,7 +560,7 @@ main {
 .navbar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   border: none;
   z-index: 110;
 }

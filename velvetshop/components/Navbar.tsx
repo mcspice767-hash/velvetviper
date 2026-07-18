@@ -43,10 +43,19 @@ export default function Navbar({ cart = [], onCartClick }: NavbarProps) {
     setDrawerOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
+
+  const closeDrawer = () => setDrawerOpen(false);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    setDrawerOpen(false);
+    closeDrawer();
   };
 
   const totalItems = cart?.reduce((sum, item) => {
@@ -78,7 +87,7 @@ export default function Navbar({ cart = [], onCartClick }: NavbarProps) {
         </nav>
 
         <div className="navbar-actions">
-          <button type="button" className="btn btn-secondary btn-icon" onClick={onCartClick}>
+          <button type="button" className="btn btn-secondary btn-icon" onClick={() => { onCartClick?.(); closeDrawer(); }}>
             <span>🛒</span>
             {totalItems > 0 && <span className="badge badge-lime navbar-cart-badge">{totalItems}</span>}
           </button>
@@ -101,33 +110,35 @@ export default function Navbar({ cart = [], onCartClick }: NavbarProps) {
         <button
           type="button"
           className="navbar-hamburger"
-          aria-label="Open navigation menu"
-          onClick={() => setDrawerOpen(true)}
+          aria-label={drawerOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={drawerOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setDrawerOpen((prev) => !prev)}
         >
           ☰
         </button>
       </div>
 
-      <div className={`navbar-drawer ${drawerOpen ? "open" : ""}`}>
+      <div id="mobile-menu" className={`navbar-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="drawer-top">
-          <Link href="/" className="drawer-brand" onClick={() => setDrawerOpen(false)}>
+          <Link href="/" className="drawer-brand" onClick={closeDrawer}>
             <span className="navbar-logo">🐍</span>
             <span>VelvetViper</span>
           </Link>
-          <button type="button" className="drawer-close" onClick={() => setDrawerOpen(false)}>
+          <button type="button" className="drawer-close" onClick={closeDrawer}>
             ✕
           </button>
         </div>
 
         <nav className="drawer-links">
-          <Link href="/" className="drawer-link" onClick={() => setDrawerOpen(false)}>Home</Link>
-          <Link href="/browse" className="drawer-link" onClick={() => setDrawerOpen(false)}>Reptiles</Link>
-          <Link href="/feeders" className="drawer-link" onClick={() => setDrawerOpen(false)}>Feeders</Link>
-          <Link href="/order-tracking" className="drawer-link" onClick={() => setDrawerOpen(false)}>Track Order</Link>
+          <Link href="/" className="drawer-link" onClick={closeDrawer}>Home</Link>
+          <Link href="/browse" className="drawer-link" onClick={closeDrawer}>Reptiles</Link>
+          <Link href="/feeders" className="drawer-link" onClick={closeDrawer}>Feeders</Link>
+          <Link href="/order-tracking" className="drawer-link" onClick={closeDrawer}>Track Order</Link>
         </nav>
 
         <div className="drawer-actions">
-          <button type="button" className="btn btn-secondary btn-full" onClick={onCartClick}>
+          <button type="button" className="btn btn-secondary btn-full" onClick={() => { onCartClick?.(); closeDrawer(); }}>
             Cart {totalItems > 0 ? `(${totalItems})` : ""}
           </button>
 
@@ -140,10 +151,10 @@ export default function Navbar({ cart = [], onCartClick }: NavbarProps) {
             </>
           ) : (
             <>
-              <Link href="/login" className="btn btn-secondary btn-full" onClick={() => setDrawerOpen(false)}>
+              <Link href="/login" className="btn btn-secondary btn-full" onClick={closeDrawer}>
                 Sign in
               </Link>
-              <Link href="/signup" className="btn btn-primary btn-full" onClick={() => setDrawerOpen(false)}>
+              <Link href="/signup" className="btn btn-primary btn-full" onClick={closeDrawer}>
                 Get Started
               </Link>
             </>
@@ -151,7 +162,7 @@ export default function Navbar({ cart = [], onCartClick }: NavbarProps) {
         </div>
       </div>
 
-      {drawerOpen && <button type="button" className="navbar-backdrop" onClick={() => setDrawerOpen(false)} />}
+      {drawerOpen && <button type="button" className="navbar-backdrop" onClick={closeDrawer} aria-label="Close navigation menu" />}
     </header>
   );
 }
