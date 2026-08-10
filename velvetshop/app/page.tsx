@@ -160,8 +160,8 @@ export default function Home() {
               <span className="text-2xl">🐍</span>
               <span className="text-xl font-bold">VELVETVIPER</span>
             </div>
-            <button 
-              onClick={() => setMenuOpen(false)} 
+            <button
+              onClick={() => setMenuOpen(false)}
               className="text-3xl text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center"
             >
               ✕
@@ -177,8 +177,8 @@ export default function Home() {
           </div>
 
           <div className="mt-auto px-6 pb-12">
-            <Link 
-              href="/browse" 
+            <Link
+              href="/browse"
               onClick={() => setMenuOpen(false)}
               className="block w-full bg-[#c8ff00] text-black text-center py-4 rounded-2xl font-bold text-lg"
             >
@@ -400,20 +400,20 @@ export default function Home() {
             <h2 className="text-2xl font-bold mb-2">Login Required</h2>
             <p className="text-gray-400 mb-8">Please login or create an account to view listings and make purchases.</p>
             <div className="space-y-3">
-              <Link 
-                href="/login" 
+              <Link
+                href="/login"
                 className="block w-full bg-[#c8ff00] text-black py-4 rounded-2xl font-bold hover:bg-white transition"
               >
                 Login
               </Link>
-              <Link 
-                href="/signup" 
+              <Link
+                href="/signup"
                 className="block w-full border border-[#c8ff00] text-[#c8ff00] py-4 rounded-2xl font-bold hover:bg-[#c8ff00] hover:text-black transition"
               >
                 Create Account
               </Link>
-              <button 
-                onClick={() => setShowLoginPrompt(false)} 
+              <button
+                onClick={() => setShowLoginPrompt(false)}
                 className="text-gray-500 hover:text-gray-300 py-2 w-full"
               >
                 Cancel
