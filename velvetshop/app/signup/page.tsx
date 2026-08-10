@@ -41,11 +41,17 @@ export default function SignupPage() {
     setError(null);
     if (formData.password !== formData.confirmPassword) { setError("Passwords do not match"); setLoading(false); return; }
     if (formData.password.length < 6) { setError("Password must be at least 6 characters"); setLoading(false); return; }
-    const { error: authError } = await supabase.auth.signUp({ email: formData.email, password: formData.password });
+    const { error: authError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/verify`
+      }
+    });
     if (authError) { setError(authError.message); setLoading(false); return; }
     try {
       await fetch("/api/notify-auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "signup", email: formData.email, timestamp: new Date().toLocaleString() }) });
-    } catch (_) {}
+    } catch (_) { }
     alert("Account created successfully! You can now log in.");
     router.push("/login");
   };
@@ -120,13 +126,13 @@ export default function SignupPage() {
         {/* Left panel */}
         <div className="lp">
           <div className="ll">
-            <span style={{fontSize:"2.2rem"}}>🐍</span>
+            <span style={{ fontSize: "2.2rem" }}>🐍</span>
             <span className="lt">VelvetViper</span>
           </div>
           <div className="lm">
             <h2 className="lh">The premium<br />reptile<br /><span>marketplace.</span></h2>
             <div className="lf2">
-              {["Buy and sell exotic reptiles safely","Verified listings from trusted breeders","AI-powered species identification","Secure payments & buyer protection"].map((f) => (
+              {["Buy and sell exotic reptiles safely", "Verified listings from trusted breeders", "AI-powered species identification", "Secure payments & buyer protection"].map((f) => (
                 <div key={f} className="fi">
                   <div className="fd" />
                   <span className="ft">{f}</span>
@@ -175,7 +181,7 @@ export default function SignupPage() {
                 {formData.password && (
                   <>
                     <div className="sbar">
-                      {[1,2,3,4,5].map((i) => (
+                      {[1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className="ss" style={{ background: i <= strength ? strengthColor : "#1a1a1a" }} />
                       ))}
                     </div>
@@ -203,7 +209,7 @@ export default function SignupPage() {
               </div>
 
               <button type="submit" disabled={loading} className="sbtn">
-                {loading ? <span className="dots"><span className="dot"/><span className="dot"/><span className="dot"/></span> : "Create Account"}
+                {loading ? <span className="dots"><span className="dot" /><span className="dot" /><span className="dot" /></span> : "Create Account"}
               </button>
             </form>
 

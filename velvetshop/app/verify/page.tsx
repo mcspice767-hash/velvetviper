@@ -44,7 +44,13 @@ export default function VerifyPage() {
     if (!email) { setError("No email found. Please sign up again."); return; }
     setResending(true);
     setError("");
-    const { error } = await supabase.auth.resend({ type: "signup", email });
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/verify`
+      }
+    });
     setResending(false);
     if (error) { setError(error.message); } else { setResent(true); setTimeout(() => setResent(false), 5000); }
   };
@@ -106,10 +112,10 @@ export default function VerifyPage() {
           <h1 className="vtitle">Check your inbox</h1>
           <p className="vsub">We sent a verification link to</p>
           {email && <p className="vsub"><span className="vemail">{email}</span></p>}
-          <p className="vsub" style={{marginTop:"8px"}}>Click the link in the email to verify your account and start browsing.</p>
+          <p className="vsub" style={{ marginTop: "8px" }}>Click the link in the email to verify your account and start browsing.</p>
 
           <div className="vcard">
-            <p style={{fontSize:"0.78rem",fontWeight:600,color:"#555",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"12px"}}>What to do</p>
+            <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "12px" }}>What to do</p>
             <div className="vstep">
               <div className="vstep-num">1</div>
               <div className="vstep-text"><strong>Open your email app</strong> — check your inbox for a message from VelvetViper</div>

@@ -325,12 +325,18 @@ export default function CheckoutPage() {
     const w = window as any;
     if (w.Tawk_API) {
       w.Tawk_API.maximize();
-      // Pre-fill message after chat opens
-      setTimeout(() => {
-        if (w.Tawk_API.sendMessage) {
-          w.Tawk_API.sendMessage(orderInfo);
-        }
-      }, 1500);
+
+      // Tawk.to doesn't have a native sendMessage API function
+      // So we copy the text to their clipboard and prompt them to paste it!
+      navigator.clipboard.writeText(orderInfo)
+        .then(() => {
+          setTimeout(() => {
+            alert("✅ Order details copied to clipboard!\n\nPlease PASTE them into the Live Chat below to confirm your payment.");
+          }, 500);
+        })
+        .catch(() => {
+          alert("Order ready! Please type your order details in the chat.");
+        });
     } else {
       alert("Live chat is loading. Please wait a moment and try again.");
     }
