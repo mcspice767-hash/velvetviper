@@ -326,17 +326,26 @@ export default function CheckoutPage() {
     if (w.Tawk_API) {
       w.Tawk_API.maximize();
 
-      // Tawk.to doesn't have a native sendMessage API function
-      // So we copy the text to their clipboard and prompt them to paste it!
-      navigator.clipboard.writeText(orderInfo)
-        .then(() => {
-          setTimeout(() => {
-            alert("✅ Order details copied to clipboard!\n\nPlease PASTE them into the Live Chat below to confirm your payment.");
-          }, 500);
-        })
-        .catch(() => {
-          alert("Order ready! Please type your order details in the chat.");
-        });
+      // Automatically send the order data directly to the Agent's Dashboard!
+      w.Tawk_API.setAttributes({
+        name: form.fullName,
+        email: email,
+        'Order Ready': 'Yes',
+        'Total Items': cart.length,
+        'Order Total': '$' + total.toFixed(2),
+        'Payment Method': activeLabel
+      }, function (error: any) { });
+
+      w.Tawk_API.addEvent('order_payment_ready', {
+        'Message': 'Hi! I am ready to confirm my payment.',
+        'Name': form.fullName,
+        'Ship To': form.address,
+        'Total': '$' + total.toFixed(2),
+        'Payment Method': activeLabel
+      });
+
+      // We quietly copy the text to their clipboard just in case the agent asks them to verify!
+      navigator.clipboard.writeText(orderInfo).catch(() => { });
     } else {
       alert("Live chat is loading. Please wait a moment and try again.");
     }
