@@ -300,68 +300,40 @@ export default function CheckoutPage() {
 
   const handleLiveChatPayment = async () => {
     const method = PAYMENT_METHODS.find((m) => m.id === selectedPayment);
-    if (!method) return;
+    const activeLabel = method ? method.label : selectedPayment;
 
-    // 1. Save order to Supabase
-    const orderData = {
-      customer_name: form.fullName,
-      customer_email: (await supabase.auth.getUser()).data.user?.email || "",
-      customer_phone: form.phone,
-      shipping_address: form.address,
-      delivery_notes: form.notes,
-      payment_method: `${method.label} (via Live Chat)`,
-      items: cart,
-      total,
-      status: "pending",
-    };
-
-    const { data: savedOrder, error } = await supabase
-      .from("orders")
-      .insert(orderData)
-      .select()
-      .single();
-
-    if (error) {
-      alert("Failed to save order: " + error.message);
-      return;
-    }
-
-    // 2. Save to localStorage for confirmation page
-    localStorage.setItem("last_order", JSON.stringify(savedOrder));
-
-    // 3. Send confirmation email
+    // Attempt to get email
+    let email = "Not provided";
     try {
-      await fetch("/api/send-order-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order: savedOrder }),
-      });
-    } catch (_) { }
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.email) email = data.user.email;
+    } catch (e) { }
 
-    // 4. Clear cart
-    localStorage.removeItem("velvetviper_cart");
+    const orderInfo = `
+      Hi! I'm ready to confirm my payment.
+      
+      Name: ${form.fullName}
+      Email: ${email}
+      Ship to: ${form.address}
+      Items: ${cart.length} reptile(s)
+      Payment method: Live Chat / ${activeLabel}
+      Total: $${total.toFixed(2)}
+      
+      Please confirm my order.
+    `;
 
-    // 5. Open Live Chat with pre-filled message
-    const itemList = cart
-      .map((i) => `• ${i.species} (${i.name || "Unnamed"}) × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
-      .join("\n");
-
-    const msg = `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* ${method.label} (via Live Chat)\n*Name:* ${form.fullName}\n*Total:* $${total.toFixed(2)}\n\n*Order ID:* #${savedOrder.id.slice(0, 8).toUpperCase()}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
-
-    if (typeof window !== "undefined" && (window as any).smartsupp) {
-      try {
-        (window as any).smartsupp("chat:open");
-        (window as any).smartsupp("chat:message", msg);
-      } catch (chatError) {
-        console.error("Smartsupp Error:", chatError);
-      }
+    const w = window as any;
+    if (w.Tawk_API) {
+      w.Tawk_API.maximize();
+      // Pre-fill message after chat opens
+      setTimeout(() => {
+        if (w.Tawk_API.sendMessage) {
+          w.Tawk_API.sendMessage(orderInfo);
+        }
+      }, 1500);
     } else {
-      alert("Note: Smartsupp Live Chat widget was not loaded. Your order has still been recorded! Copy this details and share when chat is available:\n\n" + msg);
+      alert("Live chat is loading. Please wait a moment and try again.");
     }
-
-    // 6. Redirect to confirmation page
-    setShowPaymentModal(false);
-    router.push("/order-confirmation");
   };
 
   const activeMethod = PAYMENT_METHODS.find((m) => m.id === selectedPayment);

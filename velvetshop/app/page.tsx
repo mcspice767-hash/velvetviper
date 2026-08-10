@@ -32,6 +32,16 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    checkUser();
+  }, []);
 
   const [banners] = useState([
     { id: 1, text: "🐍 Welcome to VelvetViper! Find your perfect reptile companion today.", color: "rgba(200,255,0,0.08)" },
@@ -60,7 +70,20 @@ export default function Home() {
     }
   };
 
+  const openDetail = (listing: Listing) => {
+    if (!currentUser) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    setSelectedListing(listing);
+    setShowModal(true);
+  };
+
   const addToCart = (listing: Listing) => {
+    if (!currentUser) {
+      setShowLoginPrompt(true);
+      return;
+    }
     setCart(prev => {
       const existing = prev.findIndex(item => item.id === listing.id);
       if (existing !== -1) {
@@ -213,7 +236,7 @@ export default function Home() {
           {filteredListings.slice(0, 9).map(listing => {
             const curr = getCurrency(listing.country);
             return (
-              <div key={listing.id} className="group cursor-pointer rounded-2xl bg-white p-4 shadow-lg transition hover:shadow-xl sm:rounded-3xl sm:p-6" onClick={() => setSelectedListing(listing)}>
+              <div key={listing.id} className="group cursor-pointer rounded-2xl bg-white p-4 shadow-lg transition hover:shadow-xl sm:rounded-3xl sm:p-6" onClick={() => openDetail(listing)}>
                 <div className="flex gap-3 sm:gap-4">
                   <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-gray-100 sm:h-24 sm:w-24">
                     {listing.image_url ? (
@@ -356,12 +379,11 @@ export default function Home() {
         <button
           onClick={() => {
             const w = window as any;
-            if (w.Tawk_API?.toggle) {
-              w.Tawk_API.toggle();
-            } else if (w.Tawk_API?.maximize) {
+            if (w.Tawk_API) {
+              if (w.Tawk_API.isChatHidden && w.Tawk_API.isChatHidden()) {
+                w.Tawk_API.showWidget();
+              }
               w.Tawk_API.maximize();
-            } else {
-              alert("Live chat is loading. Please wait a moment and try again.");
             }
           }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white pl-3 pr-4 py-2 rounded-full shadow-xl transition text-sm font-medium"
@@ -370,6 +392,36 @@ export default function Home() {
           <span className="hidden sm:inline">Live Chat</span>
         </button>
       </div>
+
+      {showLoginPrompt && (
+        <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4">
+          <div className="bg-[#111] border border-[#2a2a2a] rounded-3xl p-8 max-w-sm w-full text-center">
+            <div className="text-5xl mb-4">🐍</div>
+            <h2 className="text-2xl font-bold mb-2">Login Required</h2>
+            <p className="text-gray-400 mb-8">Please login or create an account to view listings and make purchases.</p>
+            <div className="space-y-3">
+              <Link 
+                href="/login" 
+                className="block w-full bg-[#c8ff00] text-black py-4 rounded-2xl font-bold hover:bg-white transition"
+              >
+                Login
+              </Link>
+              <Link 
+                href="/signup" 
+                className="block w-full border border-[#c8ff00] text-[#c8ff00] py-4 rounded-2xl font-bold hover:bg-[#c8ff00] hover:text-black transition"
+              >
+                Create Account
+              </Link>
+              <button 
+                onClick={() => setShowLoginPrompt(false)} 
+                className="text-gray-500 hover:text-gray-300 py-2 w-full"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

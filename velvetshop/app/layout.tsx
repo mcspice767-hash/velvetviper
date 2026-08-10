@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import TawkChat from "../components/TawkChat";
+import AuthGuard from "../lib/AuthGuard";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default function RootLayout({
         className="min-h-full overflow-x-hidden bg-[var(--bg)] text-[var(--text)]"
         style={{ WebkitTextSizeAdjust: "100%", WebkitOverflowScrolling: "touch" }}
       >
-        {children}
+        <AuthGuard>{children}</AuthGuard>
 
         <TawkChat />
 

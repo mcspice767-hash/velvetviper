@@ -1,48 +1,44 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { supabase } from "./supabase";
 import { useRouter, usePathname } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/verify", "/browse", "/feeders"];
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Pages that don't require login
+const PUBLIC_PAGES = ["/", "/login", "/signup", "/reset-password", "/browse"];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
+  const [checking, setChecking] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const check = async () => {
-      const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p));
+    checkAuth();
+  }, [pathname]);
 
-      // Only guard checkout and protected pages
-      const isProtected = pathname.startsWith("/checkout") || pathname.startsWith("/order-tracking") || pathname.startsWith("/account");
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+    setChecking(false);
 
-      if (!isProtected) { setChecked(true); return; }
+    const isPublicPage = PUBLIC_PAGES.some(p =>
+      pathname === p || (p !== "/" && pathname.startsWith(p))
+    );
 
-      const { data: { session } } = await supabase.auth.getSession();
+    if (!user && !isPublicPage) {
+      router.push("/login?redirect=" + pathname);
+    }
+  };
 
-      if (!session) {
-        router.push("/login?redirect=" + encodeURIComponent(pathname));
-        return;
-      }
-
-      if (!session.user.email_confirmed_at) {
-        localStorage.setItem("pending_verification_email", session.user.email || "");
-        router.push("/verify");
-        return;
-      }
-
-      setChecked(true);
-    };
-
-    check();
-  }, [pathname, router]);
-
-  if (!checked && (pathname.startsWith("/checkout") || pathname.startsWith("/order-tracking") || pathname.startsWith("/account"))) {
+  if (checking) {
     return (
-      <div style={{ minHeight: "100vh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#c8ff00", fontSize: "2rem" }}>🐍</div>
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="text-[#c8ff00] text-2xl animate-pulse">🐍 Loading...</div>
       </div>
     );
   }

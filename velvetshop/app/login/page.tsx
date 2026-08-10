@@ -13,7 +13,7 @@ function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/browse";
+  const redirect = searchParams.get("redirect") || "/";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -144,13 +144,13 @@ function LoginPageContent() {
         {/* Left panel */}
         <div className="lp">
           <div className="ll">
-            <span style={{fontSize:"2.2rem"}}>🐍</span>
+            <span style={{ fontSize: "2.2rem" }}>🐍</span>
             <span className="lt">VelvetViper</span>
           </div>
           <div className="lm">
             <h2 className="lh">Welcome<br />back to the<br /><span>marketplace.</span></h2>
             <div className="lfeats">
-              {["Track your reptile orders in real-time","Browse 100s of verified listings","Secure WhatsApp-based payments","AI-powered species identification"].map((f) => (
+              {["Track your reptile orders in real-time", "Browse 100s of verified listings", "Secure WhatsApp-based payments", "AI-powered species identification"].map((f) => (
                 <div key={f} className="lfi"><div className="lfd" /><span className="lft">{f}</span></div>
               ))}
             </div>
@@ -201,12 +201,12 @@ function LoginPageContent() {
 
               <button type="submit" disabled={loading} className="sbtn">
                 {loading
-                  ? <span className="dots"><span className="dot"/><span className="dot"/><span className="dot"/></span>
+                  ? <span className="dots"><span className="dot" /><span className="dot" /><span className="dot" /></span>
                   : "Sign In"}
               </button>
             </form>
 
-            <div className="divider"><div className="dline"/><span className="dtext">or</span><div className="dline"/></div>
+            <div className="divider"><div className="dline" /><span className="dtext">or</span><div className="dline" /></div>
 
             <div className="surow">
               New to VelvetViper?{" "}
@@ -223,7 +223,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#050505] text-[#e8e0d0] flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a]" />}>
       <LoginPageContent />
     </Suspense>
   );
