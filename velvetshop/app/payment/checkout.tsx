@@ -47,13 +47,40 @@ export default function CheckoutPage() {
 
   const handleContinue = () => {
     if (selectedPayment === "livechat") {
+      const itemList = cartItems
+        .map((item) => `• ${item.name} × ${item.quantity} — $${(item.price * item.quantity).toFixed(2)}`)
+        .join("\n");
+      const msg = `Hi! I'm ready to confirm my VelvetViper payment.
+
+*Payment Method:* ${selectedMethod?.label || "Live Chat"}
+*Name:* ${formData.fullName}
+*Total:* $${total.toFixed(2)}
+
+*Items:*
+${itemList}
+
+*Ship to:* ${formData.city}, ${formData.country}
+*Phone:* ${formData.phone}${formData.email ? `\n*Email:* ${formData.email}` : ""}`;
       const w = window as any;
-      if (typeof window !== "undefined" && w.Tawk_API) {
+      if (typeof window !== "undefined" && w.tawkChatSendOrder) {
+        w.tawkChatSendOrder({
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          items: itemList,
+          total,
+          message: msg,
+        });
+      } else if (typeof window !== "undefined" && w.Tawk_API) {
         if (w.Tawk_API.toggle) {
           w.Tawk_API.toggle();
         } else if (w.Tawk_API.maximize) {
           w.Tawk_API.maximize();
         }
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(msg).catch(() => {});
+        }
+        alert("Live chat is opening with your order details. If the message does not appear automatically, paste it into chat from your clipboard.");
       } else {
         alert("Live chat is loading. Please wait a moment and try again.");
       }
