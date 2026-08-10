@@ -348,15 +348,19 @@ export default function CheckoutPage() {
 
     const msg = `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* ${method.label} (via Live Chat)\n*Name:* ${form.fullName}\n*Total:* $${total.toFixed(2)}\n\n*Order ID:* #${savedOrder.id.slice(0, 8).toUpperCase()}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
 
-    if (typeof window !== "undefined" && (window as any).smartsupp) {
+    const w = window as any;
+    if (typeof window !== "undefined" && w.Tawk_API) {
       try {
-        (window as any).smartsupp("chat:open");
-        (window as any).smartsupp("chat:message", msg);
+        if (w.Tawk_API.toggle) {
+          w.Tawk_API.toggle();
+        } else if (w.Tawk_API.maximize) {
+          w.Tawk_API.maximize();
+        }
       } catch (chatError) {
-        console.error("Smartsupp Error:", chatError);
+        console.error("Tawk Error:", chatError);
       }
     } else {
-      alert("Note: Smartsupp Live Chat widget was not loaded. Your order has still been recorded! Copy this details and share when chat is available:\n\n" + msg);
+      alert("Note: Tawk live chat widget was not loaded. Your order has still been recorded! Copy this details and share when chat is available:\n\n" + msg);
     }
 
     // 6. Redirect to confirmation page

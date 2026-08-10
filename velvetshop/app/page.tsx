@@ -356,7 +356,13 @@ export default function Home() {
         <button
           onClick={() => {
             const w = window as any;
-            if (w.openSmartsuppChat) w.openSmartsuppChat();
+            if (w.Tawk_API?.toggle) {
+              w.Tawk_API.toggle();
+            } else if (w.Tawk_API?.maximize) {
+              w.Tawk_API.maximize();
+            } else {
+              alert("Live chat is loading. Please wait a moment and try again.");
+            }
           }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white pl-3 pr-4 py-2 rounded-full shadow-xl transition text-sm font-medium"
         >

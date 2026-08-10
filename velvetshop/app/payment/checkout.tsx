@@ -47,8 +47,15 @@ export default function CheckoutPage() {
 
   const handleContinue = () => {
     if (selectedPayment === "livechat") {
-      if (typeof window !== "undefined" && (window as any).smartsupp) {
-        (window as any).smartsupp("chat:open");
+      const w = window as any;
+      if (typeof window !== "undefined" && w.Tawk_API) {
+        if (w.Tawk_API.toggle) {
+          w.Tawk_API.toggle();
+        } else if (w.Tawk_API.maximize) {
+          w.Tawk_API.maximize();
+        }
+      } else {
+        alert("Live chat is loading. Please wait a moment and try again.");
       }
       return;
     }
@@ -122,13 +129,15 @@ export default function CheckoutPage() {
             </button>
             <button
               onClick={() => {
-                if (typeof window !== "undefined" && (window as any).smartsupp) {
-                  const itemList = cartItems
-                    .map((i) => `• ${i.name} × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
-                    .join("\n");
-                  const msg = `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* ${selectedMethod.label} (via Live Chat)\n*Name:* ${formData.fullName}\n*Total:* $${total.toFixed(2)}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${formData.city}, ${formData.country}`;
-                  (window as any).smartsupp("chat:open");
-                  (window as any).smartsupp("chat:message", msg);
+                const w = window as any;
+                if (typeof window !== "undefined" && w.Tawk_API) {
+                  if (w.Tawk_API.toggle) {
+                    w.Tawk_API.toggle();
+                  } else if (w.Tawk_API.maximize) {
+                    w.Tawk_API.maximize();
+                  }
+                } else {
+                  alert("Live chat is loading. Please wait a moment and try again.");
                 }
                 setShowConfirmModal(false);
                 setOrderStep("confirmation");

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SmartsuppChat from "../components/SmartsuppChat";
+import TawkChat from "../components/TawkChat";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,10 +33,10 @@ export default function RootLayout({
       >
         {children}
 
-        <SmartsuppChat />
+        <TawkChat />
 
         <noscript>
-          Powered by <a href="https://www.smartsupp.com" target="_blank" rel="noreferrer">Smartsupp</a>
+          Live chat powered by Tawk.to. Please enable JavaScript to use chat.
         </noscript>
       </body>
     </html>
