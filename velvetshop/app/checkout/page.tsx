@@ -346,38 +346,17 @@ export default function CheckoutPage() {
       .map((i) => `• ${i.species} (${i.name || "Unnamed"}) × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
       .join("\n");
 
-    const msg = `Hi! I'm ready to confirm my VelvetViper payment.\n\n*Payment Method:* ${method.label} (via Live Chat)\n*Name:* ${form.fullName}\n*Total:* $${total.toFixed(2)}\n\n*Order ID:* #${savedOrder.id.slice(0, 8).toUpperCase()}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
+    const msg = `Hi! I'd like to confirm my VelvetViper order.\n\n*Payment Method:* ${method.label} (via Live Chat)\n*Name:* ${form.fullName}\n*Total:* $${total.toFixed(2)}\n\n*Order ID:* #${savedOrder.id.slice(0, 8).toUpperCase()}\n\n*Items:*\n${itemList}\n\n*Ship to:* ${form.address}\n*Phone:* ${form.phone}${form.notes ? `\n*Notes:* ${form.notes}` : ""}`;
 
-    const w = window as any;
-    if (typeof window !== "undefined" && w.tawkChatSendOrder) {
-      w.tawkChatSendOrder({
-        name: form.fullName,
-        email: savedOrder.customer_email || "",
-        phone: form.phone,
-        orderId: savedOrder.id.slice(0, 8).toUpperCase(),
-        items: itemList,
-        total,
-        message: msg,
-      });
-    } else if (typeof window !== "undefined" && w.Tawk_API) {
+    if (typeof window !== "undefined" && (window as any).smartsupp) {
       try {
-        if (w.Tawk_API.toggle) {
-          w.Tawk_API.toggle();
-        } else if (w.Tawk_API.maximize) {
-          w.Tawk_API.maximize();
-        }
+        (window as any).smartsupp("chat:open");
+        (window as any).smartsupp("chat:message", msg);
       } catch (chatError) {
-        console.error("Tawk Error:", chatError);
+        console.error("Smartsupp Error:", chatError);
       }
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(msg).catch(() => {});
-      }
-      alert("Live chat is opening with your order details. If the message does not appear automatically, paste it into chat from your clipboard.");
     } else {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(msg).catch(() => {});
-      }
-      alert("Note: Tawk live chat widget was not loaded. Your order has still been recorded! Copy this details and share when chat is available:\n\n" + msg);
+      alert("Note: Smartsupp Live Chat widget was not loaded. Your order has still been recorded! Copy this details and share when chat is available:\n\n" + msg);
     }
 
     // 6. Redirect to confirmation page
